@@ -13,16 +13,7 @@ _start:
     mov dl, 0x80 ; what to copy
     int 0x13     ; do it
 
-    mov ah, 0xe
-    mov bx, NUM_SECTORS * 0x200
-loop:
-    mov al, byte [LOAD_ADDR+bx]
-    int 0x10
-    dec bx
-    test bx, bx
-    jnz loop
-    hlt
-
+    jmp LOAD_ADDR ; start it up :D
 
 
 align 16
