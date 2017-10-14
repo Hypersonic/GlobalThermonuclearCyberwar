@@ -9,35 +9,15 @@ jmp main
 
 main:
     .forever:
-        mov dh, 6 ; number of iterations per color
-        mov dl, 0x20 ; color code
-        mov ecx, 0
-        .outer:
-            mov si, SCREEN_WIDTH
-            .loop:
-                dec si
+        ; draw_line(x0, y0, x1, y1)
+        push word 0x40 ;y1 
+        push word 0x60 ;x1 
+        push word 0x10 ;y0 
+        push word 0x0 ;x0 
+        call draw_line
+        add sp, 2 * 4
 
-				push dx ; color
-				push cx ; y
-				push si ; x
-                call draw_pixel
-                add sp, sizeof(dx) + sizeof(cx) + sizeof(si)
-
-                test si, si
-                jnz .loop
-            
-            call draw_hello_world
-
-            dec dh
-            test dh, dh
-            jnz .dont_change_line
-                mov dh, 6
-                inc dl
-
-            .dont_change_line:
-            inc cx
-            cmp cx, SCREEN_HEIGHT
-            jne .outer
+        call draw_hello_world
 
         ; sleep a bit
         push cx
