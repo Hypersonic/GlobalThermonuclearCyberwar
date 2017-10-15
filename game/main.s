@@ -14,6 +14,7 @@ main:
         jge .after
 
         ; draw_line(x0, y0, x1, y1)
+        push 0x4 ; color
         push ax ;y1 
         push word 0x60 ;x1 
         push word 0x40 ;y0 
@@ -21,6 +22,7 @@ main:
         call draw_line
         add sp, 2 * 4
 
+        push 0x5 ; color
         push ax ;y1 
         push word 0x60 ;x1 
         push word 0x20 ;y0 

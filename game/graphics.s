@@ -30,7 +30,7 @@ proc draw_pixel
     pop ecx
 endproc
 
-; draw_line(x0, y0, x1, y1)
+; draw_line(x0, y0, x1, y1, color)
 ;   dx = x1 - x0
 ;   dy = y1 - y0
 ;   D = 2*dy - dx
@@ -50,6 +50,7 @@ proc draw_line
 %$y0 arg
 %$x1 arg
 %$y1 arg
+%$color arg
 %local \
     saved_ax:word, \
     saved_bx:word, \
@@ -137,7 +138,7 @@ proc draw_line
         add sp, 2 * 3
 
         ; draw_pixel(denorm(x), denorm(y), RED)
-        push word 0x4 ; red, TODO: make a parameter
+        push word [bp + %$color] ; color
         push bx       ; y 
         push ax       ; x
         call draw_pixel
