@@ -8,14 +8,28 @@ jmp main
 %include "graphics.s"
 
 main:
+    mov ax, 0x0
     .forever:
+        cmp ax, 0xcf
+        jge .after
+
         ; draw_line(x0, y0, x1, y1)
-        push word 0x40 ;y1 
+        push ax ;y1 
         push word 0x60 ;x1 
-        push word 0x10 ;y0 
-        push word 0x0 ;x0 
+        push word 0x40 ;y0 
+        push word 0x20 ;x0 
         call draw_line
         add sp, 2 * 4
+
+        push ax ;y1 
+        push word 0x60 ;x1 
+        push word 0x20 ;y0 
+        push word 0x80 ;x0 
+        call draw_line
+
+        add ax, 0x9
+        .after:
+
 
         call draw_hello_world
 

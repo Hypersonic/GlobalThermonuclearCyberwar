@@ -5,12 +5,12 @@ main.bin: boot.s game.bin
 	dd bs=512 seek=1 if=game.bin of=main.bin
 
 game.bin: game/*
-	nasm -i game/ -f bin -o game.bin game/main.s
+	nasm -g -i game/ -f bin -o game.bin game/main.s
 
 run: main.bin
 	$(eval num_kb := $(shell du -k main.bin | cut -f1))
 	@echo "Binary is $(num_kb) KB long"
-	qemu-system-i386 -serial stdio -drive format=raw,file=main.bin
+	qemu-system-i386 -serial stdio -d guest_errors -drive format=raw,file=main.bin
 
 dbg: main.bin
 	qemu-system-i386 -S -s -drive format=raw,file=main.bin
