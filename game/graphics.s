@@ -30,6 +30,26 @@ proc draw_pixel
     pop ecx
 endproc
 
+proc clear_screen
+%stacksize small
+%assign %$localsize 0
+%local saved_ecx:dword
+	sub sp, %$localsize
+
+    mov [saved_ecx], ecx
+
+    mov ecx, VMEM_BASE
+
+    .loop:
+        mov dword [ecx], 0
+        add ecx, 4
+        cmp ecx, VMEM_BASE + (SCREEN_WIDTH * SCREEN_HEIGHT)
+        jle .loop
+
+    mov ecx, [saved_ecx]
+    add sp, %$localsize
+endproc
+
 ; draw_line(x0, y0, x1, y1, color)
 ;   dx = x1 - x0
 ;   dy = y1 - y0

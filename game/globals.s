@@ -25,5 +25,4 @@ end_hello_world:
 %define SCREEN_WIDTH 320
 %define SCREEN_HEIGHT 200
 
-
 %endif

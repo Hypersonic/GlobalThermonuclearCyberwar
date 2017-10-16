@@ -10,26 +10,42 @@ jmp main
 main:
     mov ax, 0x0
     .forever:
-        cmp ax, 0xcf
-        jge .after
+        cmp ax, SCREEN_HEIGHT - 50
+        jge .reset
 
-        ; draw_line(x0, y0, x1, y1)
-        push 0x4 ; color
-        push ax ;y1 
-        push word 0x60 ;x1 
-        push word 0x40 ;y0 
-        push word 0x20 ;x0 
-        call draw_line
-        add sp, 2 * 4
+        call clear_screen
 
-        push 0x5 ; color
-        push ax ;y1 
-        push word 0x60 ;x1 
-        push word 0x20 ;y0 
-        push word 0x80 ;x0 
-        call draw_line
+        mov bx, ax
+        mov cx, bx
+        add cx, 50
+        .loop:
+            ; draw_line(x0, y0, x1, y1)
+            push 0x4 ; color
+            push bx ;y1 
+            push word 0x60 ;x1 
+            push word 100 ;y0 
+            push word 0x20 ;x0 
+            call draw_line
+            add sp, 2 * 5
 
-        add ax, 0x9
+            push 0x5 ; color
+            push bx ;y1 
+            push word 0x60 ;x1 
+            push word 40 ;y0 
+            push word 319 ;x0 
+            call draw_line
+            add sp, 2 * 5
+            add bx, 0x4
+            cmp bx, cx
+            jle .loop
+
+
+        add ax, 0x4
+
+        jmp .after
+        .reset:
+            mov ax, 0
+            jmp .forever
         .after:
 
 
