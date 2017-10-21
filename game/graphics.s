@@ -4,7 +4,7 @@
 
 %include "globals.s"
 
-; void draw_pixel(uint16_t x, uint16_t y, uint8_t vga_color)
+; void draw_pixel(uint16_t x, uint16_t y, uint16_t vga_color)
 proc draw_pixel
 %$x arg
 %$y arg

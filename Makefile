@@ -4,8 +4,13 @@ main.bin: boot.s game.bin
 	dd bs=512 if=load.bin of=main.bin
 	dd bs=512 seek=1 if=game.bin of=main.bin
 
-game.bin: game/*
+game.bin: generated_files game/*
 	nasm -g -i game/ -f bin -o game.bin game/main.s
+
+game/worldmap.s: generate_map_asm.py world.png
+	python3 generate_map_asm.py > game/worldmap.s
+
+generated_files: game/worldmap.s
 
 run: main.bin
 	$(eval num_kb := $(shell du -k main.bin | cut -f1))

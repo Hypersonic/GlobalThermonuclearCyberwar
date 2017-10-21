@@ -6,50 +6,38 @@ jmp main
 %include "globals.s"
 %include "macros.s"
 %include "graphics.s"
+%include "worldmap.s"
 
 main:
-    mov ax, 0x0
     .forever:
-        cmp ax, SCREEN_HEIGHT - 50
-        jge .reset
-
+        mov si, 0x0
         call clear_screen
-
-        mov bx, ax
-        mov cx, bx
-        add cx, 50
         .loop:
-            ; draw_line(x0, y0, x1, y1)
-            push 0x4 ; color
-            push bx ;y1 
-            push word 0x60 ;x1 
-            push word 100 ;y0 
-            push word 0x20 ;x0 
-            call draw_line
-            add sp, 2 * 5
+            mov ax, [worldmap + si + 0 * 2]
+            xor bx, bx
+            mov bl, [worldmap + si + 1 * 2]
 
-            push 0x5 ; color
-            push bx ;y1 
-            push word 0x60 ;x1 
-            push word 40 ;y0 
-            push word 319 ;x0 
-            call draw_line
-            add sp, 2 * 5
-            add bx, 0x4
-            cmp bx, cx
+            push_args ax, bx, 0x1f
+            call draw_pixel
+            add sp, 6
+
+            ; sleep a bit
+            push cx
+            push dx
+            push ax
+
+            mov cx, 0x0000
+            mov dx, 0x04ff
+            mov ah, 0x86
+            int 0x15
+
+            pop ax
+            pop dx
+            pop cx
+
+            add si, 2+1
+            cmp si, (n_worldmap_pixels-1) * (2+1)
             jle .loop
-
-
-        add ax, 0x4
-
-        jmp .after
-        .reset:
-            mov ax, 0
-            jmp .forever
-        .after:
-
-
-        call draw_hello_world
 
         ; sleep a bit
         push cx

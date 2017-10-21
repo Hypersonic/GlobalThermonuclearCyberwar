@@ -16,6 +16,12 @@
 %assign __sizeof__bp 2
 %assign __sizeof__sp 2
 
+%macro push_args 1-* 
+  %rep  %0 
+  %rotate -1 
+        push %1 
+  %endrep 
+%endmacro
 
 hello_world: db "Hello, World"
 end_hello_world:
