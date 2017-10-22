@@ -445,4 +445,144 @@ proc denormalize_from_octant
 endproc
 
 
+; uint16_t interpolate(uint16_t lo, uint16_t hi, uint16_t t)
+; interpolate between lo and hi by t / 256
+proc interpolate
+%stacksize small
+%assign %$localsize 0
+%$lo arg
+%$hi arg
+%$t arg
+%local \
+    saved_bx:word
+
+    %assign LERP_POWER_OF_2 4
+
+    sub sp, %$localsize
+    mov [saved_bx], bx
+
+    ; ax = (256 - t) * lo
+    mov ax, 1 << LERP_POWER_OF_2
+    sub ax, [bp + %$t]
+    imul ax, [bp + %$lo]
+
+    ; ax /= 256
+    sar ax, LERP_POWER_OF_2
+
+    ; bx = t * hi
+    mov bx, [bp + %$t]
+    imul bx, word [bp + %$hi]
+
+    ; bx /= 256
+    sar bx, LERP_POWER_OF_2
+
+    ; ax += bx
+    add ax, bx
+
+    mov bx, [saved_bx]
+    add sp, %$localsize
+endproc
+
+
+; void draw_bezier(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
+; Draw a 2nd order bezier curve with control points (x0, y0), (x1, y1), (x2, y2)
+;    for (t = 0; t <= 0xF; t++) {
+;        ix0, iy0 = interp_pt(x0, y0, x1, y1, t)
+;        ix1, iy1 = interp_pt(x1, y1, x2, y2, t)
+;        ox0, ox1 = interp_pt(ix0, iy0, ix1, iy1, t)
+;        plot(ox0, ox1)
+;    }
+proc draw_bezier
+%stacksize small
+%assign %$localsize 0
+%$x0 arg
+%$y0 arg
+%$x1 arg
+%$y1 arg
+%$x2 arg
+%$y2 arg
+%local \
+    saved_ax:word, \
+    saved_bx:word, \
+    saved_cx:word, \
+    interp_count:word, \
+    ix0:word, \
+    iy0:word, \
+    ix1:word, \
+    iy1:word, \
+    ox:word, \
+    oy:word, \
+    px:word, \
+    py:word
+
+    sub sp, %$localsize
+    mov [saved_ax], ax
+    mov [saved_bx], bx
+    mov [saved_cx], cx
+
+    mov ax, [bp + %$x0]
+    mov [px], ax
+    mov ax, [bp + %$y0]
+    mov [py], ax
+
+    ; XXX: We could unroll here and save cx!
+    xor cx, cx ; cx = t
+    .loop:
+        ; ix0 = interpolate(x0, x1, t)
+        push_args word [bp + %$x0], word [bp + %$x1], cx
+        call interpolate
+        add sp, 2*3
+        mov [ix0], ax
+
+        ; ix1 = interpolate(x1, x2, t)
+        push_args word [bp + %$x1], word [bp + %$x2], cx
+        call interpolate
+        add sp, 2*3
+        mov [ix1], ax
+
+        ; iy0 = interpolate(y0, y1, t)
+        push_args word [bp + %$y0], word [bp + %$y1], cx
+        call interpolate
+        add sp, 2*3
+        mov [iy0], ax
+
+        ; iy1 = interpolate(y1, y2, t)
+        push_args word [bp + %$y1], word [bp + %$y2], cx
+        call interpolate
+        add sp, 2*3
+        mov [iy1], ax
+
+        ; ox = interpolate(ix0, ix1, t)
+        push_args word [ix0], word [ix1], cx
+        call interpolate
+        add sp, 2*3
+        mov [ox], ax
+
+        ; oy = interpolate(iy0, iy1, t)
+        push_args word [iy0], word [iy1], cx
+        call interpolate
+        add sp, 2*3
+        mov [oy], ax
+
+        
+        push_args word [px], word [py], word [ox], word [oy], 4
+        call draw_line
+        add sp, 2*5
+
+        mov ax, [ox]
+        mov [px], ax
+        mov ax, [oy]
+        mov [py], ax
+
+
+        inc cx
+        cmp cx, 0xf
+        jle .loop
+
+    mov ax, [saved_cx]
+    mov bx, [saved_bx]
+    mov cx, [saved_ax]
+    add sp, %$localsize
+endproc
+
 %endif

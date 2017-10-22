@@ -10,34 +10,12 @@ jmp main
 
 main:
     .forever:
-        mov si, 0x0
         call clear_screen
-        .loop:
-            mov ax, [worldmap + si + 0 * 2]
-            xor bx, bx
-            mov bl, [worldmap + si + 1 * 2]
+        call draw_worldmap
 
-            push_args ax, bx, 0x1f
-            call draw_pixel
-            add sp, 6
-
-            ; sleep a bit
-            push cx
-            push dx
-            push ax
-
-            mov cx, 0x0000
-            mov dx, 0x04ff
-            mov ah, 0x86
-            int 0x15
-
-            pop ax
-            pop dx
-            pop cx
-
-            add si, 2+1
-            cmp si, (n_worldmap_pixels-1) * (2+1)
-            jle .loop
+        push_args 85, 88, 150, 0, 183, 73
+        call draw_bezier
+        add sp, 2*6
 
         ; sleep a bit
         push cx
@@ -56,6 +34,64 @@ main:
         jmp .forever
 
     hlt
+
+
+proc draw_worldmap
+%stacksize small
+%assign %$localsize 0
+%local \
+    saved_ax:word, \
+    saved_bx:word, \
+    saved_cx:word, \
+    saved_si:word
+
+    sub sp, %$localsize
+    mov [saved_ax], ax
+    mov [saved_bx], bx
+    mov [saved_cx], cx
+    mov [saved_si], si
+
+    xor si, si
+    xor bx, bx
+    .loop:
+        mov ax, [worldmap + si + 0 * 2]
+        mov bl, [worldmap + si + 1 * 2]
+
+        push_args ax, bx, 0x1f
+        call draw_pixel
+        add sp, 6
+
+        ; label for self-modifying code so we can nop this out
+        .map_render_pixel_sleep_amount_begin:
+        ; sleep a bit
+        push ax
+        ;mov cx, 0x0000
+        ;mov dx, 0x04ff
+        ;mov ah, 0x86
+        ;int 0x15
+        pop ax
+        ; end label for self-modifying code
+        .map_render_pixel_sleep_amount_end:
+
+        add si, 2+1
+        cmp si, (n_worldmap_pixels-1) * (2+1)
+        jle .loop
+
+    ; nop out the between-pixel sleep
+    mov si, .map_render_pixel_sleep_amount_begin
+    .nop_out_pixel_sleep:
+        mov byte [si], 0x90
+        inc si
+        cmp si, .map_render_pixel_sleep_amount_end
+        jne .nop_out_pixel_sleep
+
+    mov ax, [saved_ax]
+    mov bx, [saved_bx]
+    mov cx, [saved_cx]
+    mov si, [saved_si]
+    add sp, %$localsize
+endproc
+
 
 proc draw_hello_world
     push ax
