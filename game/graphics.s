@@ -484,9 +484,9 @@ proc interpolate
 endproc
 
 
-; void draw_bezier(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
+; void draw_bezier(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, uint16_t start_sweep, uint16_t end_sweep)
 ; Draw a 2nd order bezier curve with control points (x0, y0), (x1, y1), (x2, y2)
-;    for (t = 0; t <= 0xF; t++) {
+;    for (t = start_sweep; t <= end_sweep; t++) {
 ;        ix0, iy0 = interp_pt(x0, y0, x1, y1, t)
 ;        ix1, iy1 = interp_pt(x1, y1, x2, y2, t)
 ;        ox0, ox1 = interp_pt(ix0, iy0, ix1, iy1, t)
@@ -501,6 +501,9 @@ proc draw_bezier
 %$y1 arg
 %$x2 arg
 %$y2 arg
+%$color arg
+%$start_sweep arg
+%$end_sweep arg
 %local \
     saved_ax:word, \
     saved_bx:word, \
@@ -526,7 +529,7 @@ proc draw_bezier
     mov [py], ax
 
     ; XXX: We could unroll here and save cx!
-    xor cx, cx ; cx = t
+    mov cx, [bp + %$start_sweep]
     .loop:
         ; ix0 = interpolate(x0, x1, t)
         push_args word [bp + %$x0], word [bp + %$x1], cx
@@ -565,7 +568,7 @@ proc draw_bezier
         mov [oy], ax
 
         ; draw line between current and previous points
-        push_args word [px], word [py], word [ox], word [oy], 4
+        push_args word [px], word [py], word [ox], word [oy], word [bp + %$color]
         call draw_line
         add sp, 2*5
         
@@ -577,7 +580,7 @@ proc draw_bezier
 
         ; t++
         inc cx
-        cmp cx, 0xf
+        cmp cx, [bp + %$end_sweep]
         jle .loop
 
     mov ax, [saved_cx]

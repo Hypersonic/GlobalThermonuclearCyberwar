@@ -8,14 +8,17 @@ jmp main
 %include "graphics.s"
 %include "worldmap.s"
 
+end_sweep:
+dw 0x0
+
 main:
     .forever:
         call clear_screen
         call draw_worldmap
 
-        push_args 85, 88, 150, 0, 183, 73
+        push_args 85, 88, 150, 0, 183, 73, 4, 0, word [end_sweep]
         call draw_bezier
-        add sp, 2*6
+        add sp, 2*9
 
         ; sleep a bit
         push cx
@@ -31,7 +34,14 @@ main:
         pop dx
         pop cx
 
+        cmp word [end_sweep], 0xf
+        jl .inc_sweep
+
         jmp .forever
+
+        .inc_sweep:
+            inc word [end_sweep]
+            jmp .forever
 
     hlt
 
