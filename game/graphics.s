@@ -564,17 +564,18 @@ proc draw_bezier
         add sp, 2*3
         mov [oy], ax
 
-        
+        ; draw line between current and previous points
         push_args word [px], word [py], word [ox], word [oy], 4
         call draw_line
         add sp, 2*5
-
+        
+        ; update px, py
         mov ax, [ox]
         mov [px], ax
         mov ax, [oy]
         mov [py], ax
 
-
+        ; t++
         inc cx
         cmp cx, 0xf
         jle .loop
