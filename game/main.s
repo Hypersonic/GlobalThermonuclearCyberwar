@@ -7,6 +7,7 @@ jmp main
 %include "macros.s"
 %include "graphics.s"
 %include "worldmap.s"
+%include "launchsites.s"
 
 end_sweep:
 dw 0x0
@@ -16,9 +17,54 @@ main:
         call clear_screen
         call draw_worldmap
 
-        push_args 85, 88, 150, 0, 183, 73, 4, 0, word [end_sweep]
-        call draw_bezier
-        add sp, 2*9
+        ;push_args 85, 88, 150, 0, 183, 73, 4, 0, word [end_sweep]
+        ;call draw_bezier
+        ;add sp, 2*9
+
+        ;push_args 196, 55, 100, 0, 66, 98, 3, 0, word [end_sweep]
+        ;call draw_bezier
+        ;add sp, 2*9
+
+        push ax
+        push bx
+        push cx
+
+        xor ax, ax
+        mov cx, launchsites
+        .sites_loop:
+            mov bx, cx
+            mov al, byte [bx + 3]
+
+            cmp byte [bx], COUNTRY_AMERICA
+            jz .attack_moscow
+            .attack_dc:
+                push_args word [bx + 1], ax, \
+                          100, 0, \
+                          85, 86, \
+                          3, \
+                          0, word [end_sweep]
+                call draw_bezier
+                add sp, 2*9
+                jmp .after_attack
+            .attack_moscow:
+                push_args word [bx + 1], ax, \
+                          100, 0, \
+                          188, 73, \
+                          4, \
+                          0, word [end_sweep]
+                call draw_bezier
+                add sp, 2*9
+                jmp .after_attack
+
+            .after_attack:
+            add cx, 4
+            cmp cx, launchsites + (4 * (n_launchsites - 1))
+            jle .sites_loop
+
+        pop cx
+        pop bx
+        pop ax
+
 
         ; sleep a bit
         push cx

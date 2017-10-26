@@ -583,9 +583,9 @@ proc draw_bezier
         cmp cx, [bp + %$end_sweep]
         jle .loop
 
-    mov ax, [saved_cx]
+    mov cx, [saved_cx]
     mov bx, [saved_bx]
-    mov cx, [saved_ax]
+    mov ax, [saved_ax]
     add sp, %$localsize
 endproc
 
