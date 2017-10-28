@@ -5,6 +5,7 @@ jmp main
 
 %include "globals.s"
 %include "macros.s"
+%include "input.s"
 %include "graphics.s"
 %include "worldmap.s"
 %include "launchsites.s"
@@ -14,8 +15,41 @@ dw 0x0
 
 main:
     .forever:
+        call get_keys
         call clear_screen
         call draw_worldmap
+
+        test word [keys_set], KEYMASK_UP
+        jz .no_up_pressed
+        .up_pressed:
+            push_args 10, 10, 0x6
+            call draw_pixel
+            add sp, 2*3
+        .no_up_pressed:
+
+        test word [keys_set], KEYMASK_DOWN
+        jz .no_down_pressed
+        .down_pressed:
+            push_args 11, 10, 0x5
+            call draw_pixel
+            add sp, 2*3
+        .no_down_pressed:
+        
+        test word [keys_set], KEYMASK_LEFT
+        jz .no_left_pressed
+        .left_pressed:
+            push_args 12, 10, 0x3
+            call draw_pixel
+            add sp, 2*3
+        .no_left_pressed:
+
+        test word [keys_set], KEYMASK_RIGHT
+        jz .no_right_pressed
+        .right_pressed:
+            push_args 13, 10, 0x4
+            call draw_pixel
+            add sp, 2*3
+        .no_right_pressed:
 
         ;push_args 85, 88, 150, 0, 183, 73, 4, 0, word [end_sweep]
         ;call draw_bezier
@@ -39,8 +73,8 @@ main:
             jz .attack_moscow
             .attack_dc:
                 push_args word [bx + 1], ax, \
-                          100, 0, \
-                          85, 86, \
+                          120, 0, \
+                          85, 100, \
                           3, \
                           0, word [end_sweep]
                 call draw_bezier
@@ -82,6 +116,8 @@ main:
 
         cmp word [end_sweep], 0xf
         jl .inc_sweep
+
+        mov word [end_sweep], 0x0
 
         jmp .forever
 

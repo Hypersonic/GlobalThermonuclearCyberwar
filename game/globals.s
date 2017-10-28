@@ -26,7 +26,8 @@
 hello_world: db "Hello, World"
 end_hello_world:
 
-
+; mask to get what keys are pressed. See input.s for the mask constants
+keys_set: dw 0x0
 
 %define VMEM_BASE 0xA0000
 %define SCREEN_WIDTH 320
