@@ -99,10 +99,10 @@ proc draw_worldmap
         .map_render_pixel_sleep_amount_begin:
         ; sleep a bit
         push ax
-        ;mov cx, 0x0000
-        ;mov dx, 0x04ff
-        ;mov ah, 0x86
-        ;int 0x15
+        mov cx, 0x0000
+        mov dx, 0x04ff
+        mov ah, 0x86
+        int 0x15
         pop ax
         ; end label for self-modifying code
         .map_render_pixel_sleep_amount_end:
@@ -112,12 +112,20 @@ proc draw_worldmap
         jle .loop
 
     ; nop out the between-pixel sleep
+    .nop_out_area_begin:
     mov si, .map_render_pixel_sleep_amount_begin
     .nop_out_pixel_sleep:
         mov byte [si], 0x90
         inc si
         cmp si, .map_render_pixel_sleep_amount_end
         jne .nop_out_pixel_sleep
+    ; nop out the nop-outer, including this nop-outer nop-outer :)
+    ; I don't know why i made this but I think it's beautiful
+    mov cx, .nop_out_area_end - .nop_out_area_begin
+    mov al, 0x90
+    mov di, .nop_out_area_begin
+    rep stosb
+    .nop_out_area_end:
 
     mov ax, [saved_ax]
     mov bx, [saved_bx]
