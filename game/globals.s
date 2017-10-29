@@ -23,6 +23,8 @@
   %endrep 
 %endmacro
 
+selected_country: db 0
+
 hello_world: db "Hello, World"
 end_hello_world:
 
@@ -35,5 +37,24 @@ current_screen: dw 0x0
 %define VMEM_BASE 0xA0000
 %define SCREEN_WIDTH 320
 %define SCREEN_HEIGHT 200
+
+; screen selector constants
+%define SCREEN_MENU 0
+%define SCREEN_GAMEPLAY 1
+
+
+; ==== STRINGS ====
+
+select_country: db "SELECT YOUR COUNTRY:"
+end_select_country:
+
+select_usa: db "USA"
+end_select_usa:
+
+select_ussr: db "USSR"
+end_select_ussr:
+
+country_cursor: db ">"
+end_country_cursor:
 
 %endif

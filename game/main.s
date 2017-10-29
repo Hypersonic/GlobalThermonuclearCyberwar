@@ -10,22 +10,20 @@ jmp main
 %include "graphics.s"
 
 main:
-    mov word [current_screen], SCREEN_GAMEPLAY
+    mov word [current_screen], SCREEN_MENU
     .forever:
         call get_keys
         call clear_screen
         call do_current_screen
         call draw_keypress_pixels
 
-
         ; sleep a bit
         mov cx, 0x0000
-        mov dx, 0xffff
+        mov dx, 0x8fff
         mov ah, 0x86
         int 0x15
 
         jmp .forever
-
     hlt
 
 ; draw keypress pixels on screen for debugging purposes
@@ -61,6 +59,14 @@ proc draw_keypress_pixels
         call draw_pixel
         add sp, 2*3
     .no_right_pressed:
+
+    test word [keys_set], KEYMASK_ENTER
+    jz .no_enter_pressed
+    .enter_pressed:
+        push_args 12, 9, 0x7
+        call draw_pixel
+        add sp, 2*3
+    .no_enter_pressed:
 endproc
 
 proc draw_hello_world

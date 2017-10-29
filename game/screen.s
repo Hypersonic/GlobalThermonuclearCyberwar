@@ -5,9 +5,6 @@
 %include "countryselect.s"
 %include "gameplay.s"
 
-%define SCREEN_MENU 0
-%define SCREEN_GAMEPLAY 1
-
 ; function pointer table of screens.
 ; dispatch by the index of the SCREEN_* macros above
 screen_dispatch_table:
