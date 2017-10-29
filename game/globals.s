@@ -29,6 +29,9 @@ end_hello_world:
 ; mask to get what keys are pressed. See input.s for the mask constants
 keys_set: dw 0x0
 
+; screen state. see screens.s for possible values
+current_screen: dw 0x0
+
 %define VMEM_BASE 0xA0000
 %define SCREEN_WIDTH 320
 %define SCREEN_HEIGHT 200
