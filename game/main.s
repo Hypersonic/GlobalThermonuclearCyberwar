@@ -13,9 +13,9 @@ main:
     mov word [current_screen], SCREEN_MENU
     .forever:
         call get_keys
-        call clear_screen
-        call do_current_screen
+        call clear_framebuffer
         call draw_keypress_pixels
+        call do_current_screen
 
         ; sleep a bit
         mov cx, 0x0000

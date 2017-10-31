@@ -31,21 +31,17 @@ proc screen_gameplay
         jz .attack_moscow
         .attack_dc:
             push_args word [bx + 1], ax, \
-                      120, 0, \
                       85, 100, \
-                      3, \
-                      0, word [end_sweep]
-            call draw_bezier
-            add sp, 2*9
+                      3, word [end_sweep]
+            call draw_trajectory
+            add sp, 2*6
             jmp .after_attack
         .attack_moscow:
             push_args word [bx + 1], ax, \
-                      100, 0, \
                       188, 73, \
-                      4, \
-                      0, word [end_sweep]
-            call draw_bezier
-            add sp, 2*9
+                      4, word [end_sweep]
+            call draw_trajectory
+            add sp, 2*6
             jmp .after_attack
 
         .after_attack:
@@ -63,11 +59,60 @@ proc screen_gameplay
     
     .end:
 
+    call blit_screen
+
     mov cx, [saved_cx]
     mov bx, [saved_bx]
     mov ax, [saved_ax]
     add sp, %$localsize
+endproc
 
+; draw_trajectory(start_x, start_y, end_x, end_y, color, end_sweep)
+proc draw_trajectory
+%stacksize small
+%assign %$localsize 0
+%$start_x arg
+%$start_y arg
+%$end_x arg
+%$end_y arg
+%$color arg
+%$end_sweep arg
+%local \
+    saved_ax:word, \
+    mid_x:word, \
+    mid_y:word
+
+    sub sp, %$localsize
+    mov [saved_ax], ax
+
+    ; mid_x = interpolate(start_x, end_x, 0xb)
+    push_args word [bp + %$start_x], word [bp + %$end_x], 0xb
+    call interpolate
+    add sp, 2*3
+    mov [mid_x], ax
+
+    ; mid_y = min(start_y, end_y) - 100
+    ; TODO: find a really volatile formula instead that gives them overwrite
+    mov ax, [bp + %$start_y]
+    cmp ax, [bp + %$end_y]
+    jg .no_min
+    .min:
+        mov ax, [bp + %$end_y]
+    .no_min:
+
+    sub ax, 100
+    mov [mid_y], ax
+
+    push_args word [bp + %$start_x], word [bp + %$start_y], \
+              word [mid_x], word [mid_y], \
+              word [bp + %$end_x], word [bp + %$end_y], \
+              word [bp + %$color], \
+              0, word [bp + %$end_sweep]
+    call draw_bezier
+    add sp, 2*9
+
+    mov ax, [saved_ax]
+    add sp, %$localsize
 endproc
 
 proc draw_worldmap
@@ -99,10 +144,10 @@ proc draw_worldmap
         .map_render_pixel_sleep_amount_begin:
         ; sleep a bit
         push ax
-        mov cx, 0x0000
-        mov dx, 0x04ff
-        mov ah, 0x86
-        int 0x15
+        ;mov cx, 0x0000
+        ;mov dx, 0x04ff
+        ;mov ah, 0x86
+        ;int 0x15
         pop ax
         ; end label for self-modifying code
         .map_render_pixel_sleep_amount_end:

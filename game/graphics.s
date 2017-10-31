@@ -21,8 +21,9 @@ proc draw_pixel
     ; si = x
     mov si, [bp + %$x]
 
-    imul cx, SCREEN_WIDTH
-    mov byte [VMEM_BASE + ecx + esi], dl
+    movsx ecx, cx
+    imul ecx, SCREEN_WIDTH
+    mov byte [FRAMEBUFFER_BASE + ecx + esi], dl
 
     ; restore regs
     pop edx
@@ -30,7 +31,7 @@ proc draw_pixel
     pop ecx
 endproc
 
-proc clear_screen
+proc clear_framebuffer
 %stacksize small
 %assign %$localsize 0
 %local saved_ecx:dword
@@ -38,14 +39,40 @@ proc clear_screen
 
     mov [saved_ecx], ecx
 
-    mov ecx, VMEM_BASE
+    mov ecx, FRAMEBUFFER_BASE
 
     .loop:
         mov dword [ecx], 0
         add ecx, 4
-        cmp ecx, VMEM_BASE + (SCREEN_WIDTH * SCREEN_HEIGHT)
+        cmp ecx, FRAMEBUFFER_BASE + (SCREEN_WIDTH * SCREEN_HEIGHT)
         jle .loop
 
+    mov ecx, [saved_ecx]
+    add sp, %$localsize
+endproc
+
+proc blit_screen
+%stacksize small
+%assign %$localsize 0
+%local \
+    saved_ebx:dword, \
+    saved_ecx:dword
+
+	sub sp, %$localsize
+
+    mov [saved_ecx], ecx
+    mov [saved_ebx], ebx
+
+    mov ecx, 0
+
+    .loop:
+        mov ebx,  dword [FRAMEBUFFER_BASE + ecx]
+        mov dword [VMEM_BASE + ecx], ebx
+        add ecx, 4
+        cmp ecx, SCREEN_WIDTH * SCREEN_HEIGHT
+        jle .loop
+
+    mov ebx, [saved_ebx]
     mov ecx, [saved_ecx]
     add sp, %$localsize
 endproc

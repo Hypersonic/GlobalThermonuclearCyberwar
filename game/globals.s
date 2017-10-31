@@ -34,6 +34,7 @@ keys_set: dw 0x0
 ; screen state. see screens.s for possible values
 current_screen: dw 0x0
 
+%define FRAMEBUFFER_BASE 0x10000
 %define VMEM_BASE 0xA0000
 %define SCREEN_WIDTH 320
 %define SCREEN_HEIGHT 200
@@ -56,5 +57,8 @@ end_select_ussr:
 
 country_cursor: db ">"
 end_country_cursor:
+
+country_clear: db " "
+end_country_clear:
 
 %endif
