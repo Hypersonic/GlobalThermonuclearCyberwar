@@ -10,7 +10,7 @@ jmp main
 %include "graphics.s"
 
 main:
-    mov word [current_screen], SCREEN_MENU
+    mov word [current_screen], SCREEN_GAMEPLAY
     .forever:
         call get_keys
         call clear_framebuffer
@@ -67,26 +67,4 @@ proc draw_keypress_pixels
         call draw_pixel
         add sp, 2*3
     .no_enter_pressed:
-endproc
-
-proc draw_hello_world
-    push ax
-    push bx
-    push cx
-    push dx
-    push bp
-
-    mov ax, 0x1300 ; draw string
-    mov bh, 0
-    mov bl, 0xf
-    mov cx, end_hello_world - hello_world
-    mov dx, 0x090c
-    mov bp, hello_world
-    int 0x10
-
-    pop bp
-    pop dx
-    pop cx
-    pop bx
-    pop ax
 endproc

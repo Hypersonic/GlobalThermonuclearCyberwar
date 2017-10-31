@@ -100,7 +100,7 @@ proc draw_trajectory
         mov ax, [bp + %$end_y]
     .no_min:
 
-    sub ax, 100
+    sub ax, 1000
     mov [mid_y], ax
 
     push_args word [bp + %$start_x], word [bp + %$start_y], \
