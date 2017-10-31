@@ -15,7 +15,7 @@ generated_files: game/worldmap.s
 run: main.bin
 	$(eval num_kb := $(shell du -k main.bin | cut -f1))
 	@echo "Binary is $(num_kb) KB long"
-	qemu-system-x86_64 -serial stdio -d guest_errors -drive format=raw,file=main.bin
+	qemu-system-i386 -serial stdio -d guest_errors -drive format=raw,file=main.bin
 
 dbg: main.bin
-	qemu-system-x86_64 -S -s -drive format=raw,file=main.bin
+	qemu-system-i386 -S -s -d guest_errors -drive format=raw,file=main.bin

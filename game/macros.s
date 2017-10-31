@@ -4,7 +4,4 @@
 
 %include "globals.s"
 
-%define quot "
-%define stringify(x) quot %+ x %+ quot
-
 %endif

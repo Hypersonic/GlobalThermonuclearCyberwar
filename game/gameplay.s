@@ -20,6 +20,12 @@ proc screen_gameplay
     mov [saved_cx], cx
 
     call draw_worldmap
+    call move_target
+    call draw_target
+
+    push_args 10, 100, word [target_x], word [target_y], 2, 0x10
+    call draw_trajectory
+    add sp, 2*6
 
     xor ax, ax
     mov cx, launchsites
@@ -95,12 +101,12 @@ proc draw_trajectory
     ; TODO: find a really volatile formula instead that gives them overwrite
     mov ax, [bp + %$start_y]
     cmp ax, [bp + %$end_y]
-    jg .no_min
+    jl .no_min
     .min:
         mov ax, [bp + %$end_y]
     .no_min:
 
-    sub ax, 1000
+    sub ax, 100
     mov [mid_y], ax
 
     push_args word [bp + %$start_x], word [bp + %$start_y], \
@@ -111,6 +117,93 @@ proc draw_trajectory
     call draw_bezier
     add sp, 2*9
 
+    mov ax, [saved_ax]
+    add sp, %$localsize
+endproc
+
+; move the target around based on arrow keys
+proc move_target
+    test word [keys_set], KEYMASK_UP
+    jz .no_up
+    .up:
+        dec word [target_y]
+    .no_up:
+
+    test word [keys_set], KEYMASK_DOWN
+    jz .no_down
+    .down:
+        inc word [target_y]
+    .no_down:
+
+    test word [keys_set], KEYMASK_LEFT
+    jz .no_left
+    .left:
+        dec word [target_x]
+    .no_left:
+
+    test word [keys_set], KEYMASK_RIGHT
+    jz .no_right
+    .right:
+        inc word [target_x]
+    .no_right:
+endproc
+
+proc draw_target
+%stacksize small
+%assign %$localsize 0
+%local \
+    saved_ax:word, \
+    saved_bx:word, \
+    x:word, \
+    y:word
+
+    sub sp, %$localsize
+    mov [saved_ax], ax
+    mov [saved_bx], bx
+
+    ; Target looks like this:
+    ;  +
+    ; + +
+    ;  +
+
+    mov ax, [target_x]
+    mov bx, [target_y]
+    ;     
+    ; +    
+    ;     
+    dec ax
+    push_args ax, bx, 0xc
+    call draw_pixel
+    add sp, 2*3
+
+    ;     
+    ; +
+    ;  +   
+    inc ax
+    inc bx
+    push_args ax, bx, 0xc
+    call draw_pixel
+    add sp, 2*3
+
+    ;     
+    ; + +
+    ;  +   
+    inc ax
+    dec bx
+    push_args ax, bx, 0xc
+    call draw_pixel
+    add sp, 2*3
+
+    ;  +
+    ; + +
+    ;  +   
+    dec ax
+    dec bx
+    push_args ax, bx, 0xc
+    call draw_pixel
+    add sp, 2*3
+
+    mov bx, [saved_bx]
     mov ax, [saved_ax]
     add sp, %$localsize
 endproc
