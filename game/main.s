@@ -10,6 +10,7 @@ jmp main
 %include "graphics.s"
 
 main:
+    call setup_demo_launches ; for testing :)
     mov word [current_screen], SCREEN_GAMEPLAY
     .forever:
         call get_keys

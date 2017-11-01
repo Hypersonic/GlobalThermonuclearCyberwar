@@ -4,8 +4,6 @@
 %include "worldmap.s"
 %include "launchsites.s"
 
-end_sweep: dw 0x0
-
 proc screen_gameplay
 %stacksize small
 %assign %$localsize 0
@@ -27,42 +25,42 @@ proc screen_gameplay
     call draw_trajectory
     add sp, 2*6
 
-    xor ax, ax
-    mov cx, launchsites
-    .sites_loop:
-        mov bx, cx
-        mov al, byte [bx + 3]
+    mov si, missile_slots
+    .loop:
+        cmp byte [si + 12], 0 ; skip if not in_use
+        je .skip
 
-        cmp byte [bx], COUNTRY_AMERICA
-        jz .attack_moscow
-        .attack_dc:
-            push_args word [bx + 1], ax, \
-                      85, 100, \
-                      3, word [end_sweep]
-            call draw_trajectory
-            add sp, 2*6
-            jmp .after_attack
-        .attack_moscow:
-            push_args word [bx + 1], ax, \
-                      188, 73, \
-                      4, word [end_sweep]
-            call draw_trajectory
-            add sp, 2*6
-            jmp .after_attack
+        ; render missile
+        push_args word [si + 0], word [si + 2], \
+                  word [si + 4], word [si + 6], \
+                  word [si + 14], word [si + 8]
+        call draw_trajectory
+        add sp, 2*6
 
-        .after_attack:
-        add cx, 4
-        cmp cx, launchsites + (4 * (n_launchsites - 1))
-        jle .sites_loop
+        ; advance ticks_until_move
+        dec word [si + 10]
+        cmp word [si + 10], 0
+        jne .no_reset_ticks
+        .reset_ticks:
+            mov word [si + 10], TICKS_BETWEEN_MOVES
+            ; increment end_sweep, unless we're at max
+            cmp word [si + 8], 0xf
+            jg .no_inc_sweep
+            .inc_sweep:
+                inc word [si + 8]
+            .no_inc_sweep:
+        .no_reset_ticks:
+        
+        add si, 16
+        cmp si, end_missile_slots
+        jl .loop
+        jmp .after_loop
+        .skip:
+            add si, 16
+            cmp si, end_missile_slots
+            jl .loop
+    .after_loop:
 
-    cmp word [end_sweep], 0xf
-    jl .inc_sweep
-
-    mov word [end_sweep], 0x0
-    jmp .end
-    .inc_sweep:
-        inc word [end_sweep]
-    
     .end:
 
     call blit_screen
@@ -71,6 +69,52 @@ proc screen_gameplay
     mov bx, [saved_bx]
     mov ax, [saved_ax]
     add sp, %$localsize
+endproc
+
+proc setup_demo_launches
+%stacksize small
+%assign %$localsize 0
+
+    mov word [missile_slot_0 + 0], 70                   ; launch_x
+    mov word [missile_slot_0 + 2], 77                   ; launch_y
+    mov word [missile_slot_0 + 4], 100                  ; target_x
+    mov word [missile_slot_0 + 6], 100                  ; target_y
+    mov word [missile_slot_0 + 8], 0x0                  ; end_sweep
+    mov word [missile_slot_0 + 10], TICKS_BETWEEN_MOVES ; ticks_until_move
+    mov byte [missile_slot_0 + 12], 1                   ; in_use
+    mov byte [missile_slot_0 + 13], COUNTRY_AMERICA     ; country
+    mov byte [missile_slot_0 + 14], 0x2                 ; yield
+
+    mov word [missile_slot_1 + 0], 73                   ; launch_x
+    mov word [missile_slot_1 + 2], 84                   ; launch_y
+    mov word [missile_slot_1 + 4], 200                  ; target_x
+    mov word [missile_slot_1 + 6], 30                   ; target_y
+    mov word [missile_slot_1 + 8], 0x1                  ; end_sweep
+    mov word [missile_slot_1 + 10], TICKS_BETWEEN_MOVES ; ticks_until_move
+    mov byte [missile_slot_1 + 12], 1                   ; in_use
+    mov byte [missile_slot_1 + 13], COUNTRY_AMERICA     ; country
+    mov byte [missile_slot_1 + 14], 0x3                 ; yield
+
+    mov word [missile_slot_2 + 0], 65                   ; launch_x
+    mov word [missile_slot_2 + 2], 75                   ; launch_y
+    mov word [missile_slot_2 + 4], 10                   ; target_x
+    mov word [missile_slot_2 + 6], 150                  ; target_y
+    mov word [missile_slot_2 + 8], 0x2                  ; end_sweep
+    mov word [missile_slot_2 + 10], TICKS_BETWEEN_MOVES ; ticks_until_move
+    mov byte [missile_slot_2 + 12], 1                   ; in_use
+    mov byte [missile_slot_2 + 13], COUNTRY_AMERICA     ; country
+    mov byte [missile_slot_2 + 14], 0x4                 ; yield
+
+    mov word [missile_slot_3 + 0], 60                   ; launch_x
+    mov word [missile_slot_3 + 2], 79                   ; launch_y
+    mov word [missile_slot_3 + 4], 50                   ; target_x
+    mov word [missile_slot_3 + 6], 200                  ; target_y
+    mov word [missile_slot_3 + 8], 0x3                  ; end_sweep
+    mov word [missile_slot_3 + 10], TICKS_BETWEEN_MOVES ; ticks_until_move
+    mov byte [missile_slot_3 + 12], 1                   ; in_use
+    mov byte [missile_slot_3 + 13], COUNTRY_AMERICA     ; country
+    mov byte [missile_slot_3 + 14], 0x5                 ; yield
+
 endproc
 
 ; draw_trajectory(start_x, start_y, end_x, end_y, color, end_sweep)
@@ -123,6 +167,7 @@ endproc
 
 ; move the target around based on arrow keys
 proc move_target
+%stacksize small
     test word [keys_set], KEYMASK_UP
     jz .no_up
     .up:
@@ -146,6 +191,36 @@ proc move_target
     .right:
         inc word [target_x]
     .no_right:
+endproc
+
+; find a missile slot that is available, or return -1 if none
+proc get_available_missile_slot
+%stacksize small
+%assign %$localsize 0
+%local \
+    saved_si:word
+
+    sub sp, %$localsize
+    mov [saved_si], si
+
+    mov ax, 0
+    .loop:
+        ; if in_use != 0, end
+        mov si, ax
+        shl si, 4
+        cmp byte [missile_slots + si + 12], 0
+        jne .end
+
+        inc ax
+        cmp ax, MAX_MISSLES
+        jl .loop
+
+    .none_found: ; if we don't find any, return -1
+        mov ax, -1
+
+    .end:
+    mov si, [saved_si]
+    add sp, %$localsize
 endproc
 
 proc draw_target
