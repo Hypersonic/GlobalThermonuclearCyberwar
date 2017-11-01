@@ -48,7 +48,11 @@ proc screen_gameplay
             jg .no_inc_sweep
             .inc_sweep:
                 inc word [si + 8]
+                jmp .after_sweep
             .no_inc_sweep:
+                ; TODO: create explosion here
+                mov word [si + 8], 0
+            .after_sweep:
         .no_reset_ticks:
         
         add si, 16
@@ -77,8 +81,8 @@ proc setup_demo_launches
 
     mov word [missile_slot_0 + 0], 70                   ; launch_x
     mov word [missile_slot_0 + 2], 77                   ; launch_y
-    mov word [missile_slot_0 + 4], 100                  ; target_x
-    mov word [missile_slot_0 + 6], 100                  ; target_y
+    mov word [missile_slot_0 + 4], 200                  ; target_x
+    mov word [missile_slot_0 + 6], 60                   ; target_y
     mov word [missile_slot_0 + 8], 0x0                  ; end_sweep
     mov word [missile_slot_0 + 10], TICKS_BETWEEN_MOVES ; ticks_until_move
     mov byte [missile_slot_0 + 12], 1                   ; in_use
@@ -87,9 +91,9 @@ proc setup_demo_launches
 
     mov word [missile_slot_1 + 0], 73                   ; launch_x
     mov word [missile_slot_1 + 2], 84                   ; launch_y
-    mov word [missile_slot_1 + 4], 200                  ; target_x
-    mov word [missile_slot_1 + 6], 30                   ; target_y
-    mov word [missile_slot_1 + 8], 0x1                  ; end_sweep
+    mov word [missile_slot_1 + 4], 180                  ; target_x
+    mov word [missile_slot_1 + 6], 65                   ; target_y
+    mov word [missile_slot_1 + 8], 0x4                  ; end_sweep
     mov word [missile_slot_1 + 10], TICKS_BETWEEN_MOVES ; ticks_until_move
     mov byte [missile_slot_1 + 12], 1                   ; in_use
     mov byte [missile_slot_1 + 13], COUNTRY_AMERICA     ; country
@@ -97,9 +101,9 @@ proc setup_demo_launches
 
     mov word [missile_slot_2 + 0], 65                   ; launch_x
     mov word [missile_slot_2 + 2], 75                   ; launch_y
-    mov word [missile_slot_2 + 4], 10                   ; target_x
-    mov word [missile_slot_2 + 6], 150                  ; target_y
-    mov word [missile_slot_2 + 8], 0x2                  ; end_sweep
+    mov word [missile_slot_2 + 4], 210                  ; target_x
+    mov word [missile_slot_2 + 6], 55                   ; target_y
+    mov word [missile_slot_2 + 8], 0x8                  ; end_sweep
     mov word [missile_slot_2 + 10], TICKS_BETWEEN_MOVES ; ticks_until_move
     mov byte [missile_slot_2 + 12], 1                   ; in_use
     mov byte [missile_slot_2 + 13], COUNTRY_AMERICA     ; country
@@ -107,9 +111,9 @@ proc setup_demo_launches
 
     mov word [missile_slot_3 + 0], 60                   ; launch_x
     mov word [missile_slot_3 + 2], 79                   ; launch_y
-    mov word [missile_slot_3 + 4], 50                   ; target_x
-    mov word [missile_slot_3 + 6], 200                  ; target_y
-    mov word [missile_slot_3 + 8], 0x3                  ; end_sweep
+    mov word [missile_slot_3 + 4], 180                  ; target_x
+    mov word [missile_slot_3 + 6], 88                   ; target_y
+    mov word [missile_slot_3 + 8], 0xc                  ; end_sweep
     mov word [missile_slot_3 + 10], TICKS_BETWEEN_MOVES ; ticks_until_move
     mov byte [missile_slot_3 + 12], 1                   ; in_use
     mov byte [missile_slot_3 + 13], COUNTRY_AMERICA     ; country

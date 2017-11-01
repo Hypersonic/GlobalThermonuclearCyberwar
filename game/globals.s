@@ -44,7 +44,7 @@ current_screen: dw 0x0
 target_x: dw 10
 target_y: dw 100
 
-%define TICKS_BETWEEN_MOVES 5
+%define TICKS_BETWEEN_MOVES 20
 
 
 %define MAX_MISSLES 0x20

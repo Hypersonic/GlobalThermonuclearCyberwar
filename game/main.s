@@ -20,7 +20,7 @@ main:
 
         ; sleep a bit
         mov cx, 0x0000
-        mov dx, 0x8fff
+        mov dx, 0x0fff
         mov ah, 0x86
         int 0x15
 
