@@ -35,6 +35,9 @@ cheats_enabled: dw 0x0
 ; screen state. see screens.s for possible values
 current_screen: dw 0x0
 
+; game phase. check against the enum PHASE_* values in game/gameplay.s
+game_phase: dw 0x0
+
 %define FRAMEBUFFER_BASE 0x10000
 %define VMEM_BASE 0xA0000
 %define SCREEN_WIDTH 320
@@ -47,6 +50,7 @@ current_screen: dw 0x0
 ; targetting
 target_x: dw 10
 target_y: dw 100
+target_strength: dw 0xc
 
 %define TICKS_BETWEEN_MOVES 30
 

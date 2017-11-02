@@ -68,4 +68,20 @@ proc draw_keypress_pixels
         call draw_pixel
         add sp, 2*3
     .no_enter_pressed:
+
+    test word [keys_set], KEYMASK_Q
+    jz .no_q_pressed
+    .q_pressed:
+        push_args 8, 8, 0x8
+        call draw_pixel
+        add sp, 2*3
+    .no_q_pressed:
+
+    test word [keys_set], KEYMASK_A
+    jz .no_a_pressed
+    .a_pressed:
+        push_args 8, 9, 0x9
+        call draw_pixel
+        add sp, 2*3
+    .no_a_pressed:
 endproc

@@ -9,6 +9,8 @@
 %define KEYMASK_LEFT  1 << 2
 %define KEYMASK_RIGHT 1 << 3
 %define KEYMASK_ENTER 1 << 4
+%define KEYMASK_Q     1 << 5
+%define KEYMASK_A     1 << 6
 
 ; Scancodes we care about
 %define SCANCODE_UP    0x48
@@ -16,6 +18,8 @@
 %define SCANCODE_LEFT  0x4B
 %define SCANCODE_RIGHT 0x4D
 %define SCANCODE_ENTER 0x1C
+%define SCANCODE_Q     0x10 
+%define SCANCODE_A     0x1E
 
 ; Read until keyboard buffer is empty, setting bits in keys_set appropriately
 ; Clears the keys that were set the previous time this function was called!
@@ -50,6 +54,10 @@ proc get_keys
         je .set_right
         cmp ah, SCANCODE_ENTER
         je .set_enter
+        cmp ah, SCANCODE_Q
+        je .set_q
+        cmp ah, SCANCODE_A
+        je .set_a
         jmp .read_loop ; didn't match any, just get next key
 
         ; set bits
@@ -67,6 +75,12 @@ proc get_keys
             jmp .read_loop
         .set_enter:
             or word [keys_set], KEYMASK_ENTER
+            jmp .read_loop
+        .set_q:
+            or word [keys_set], KEYMASK_Q
+            jmp .read_loop
+        .set_a:
+            or word [keys_set], KEYMASK_A
             jmp .read_loop
 
     .no_more_input: ; return when input exhausted

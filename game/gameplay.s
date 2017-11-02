@@ -4,6 +4,10 @@
 %include "worldmap.s"
 %include "launchsites.s"
 
+%define PHASE_SELECTLAUNCHSITE 0
+%define PHASE_SELECTTARGET     0
+%define PHASE_ENEMYMOVE        0
+
 proc screen_gameplay
 %stacksize small
 %assign %$localsize 0
@@ -170,6 +174,7 @@ proc draw_trajectory
 endproc
 
 ; move the target around based on arrow keys
+; also chane intensity of shot (q/a)
 proc move_target
 %stacksize small
     test word [keys_set], KEYMASK_UP
@@ -195,6 +200,20 @@ proc move_target
     .right:
         inc word [target_x]
     .no_right:
+
+    test word [keys_set], KEYMASK_Q
+    jz .no_q
+    .q:
+        inc word [target_strength]
+        and word [target_strength], 0xff
+    .no_q:
+
+    test word [keys_set], KEYMASK_A
+    jz .no_a
+    .a:
+        dec word [target_strength]
+        and word [target_strength], 0xff
+    .no_a:
 endproc
 
 ; find a missile slot that is available, or return -1 if none
@@ -251,7 +270,7 @@ proc draw_target
     ; +    
     ;     
     dec ax
-    push_args ax, bx, 0xc
+    push_args ax, bx, word [target_strength]
     call draw_pixel
     add sp, 2*3
 
@@ -260,7 +279,7 @@ proc draw_target
     ;  +   
     inc ax
     inc bx
-    push_args ax, bx, 0xc
+    push_args ax, bx, word [target_strength]
     call draw_pixel
     add sp, 2*3
 
@@ -269,7 +288,7 @@ proc draw_target
     ;  +   
     inc ax
     dec bx
-    push_args ax, bx, 0xc
+    push_args ax, bx, word [target_strength]
     call draw_pixel
     add sp, 2*3
 
@@ -278,7 +297,7 @@ proc draw_target
     ;  +   
     dec ax
     dec bx
-    push_args ax, bx, 0xc
+    push_args ax, bx, word [target_strength]
     call draw_pixel
     add sp, 2*3
 
@@ -320,6 +339,7 @@ proc draw_worldmap
         ;mov dx, 0x04ff
         ;mov ah, 0x86
         ;int 0x15
+        ;call blit_screen
         pop ax
         ; end label for self-modifying code
         .map_render_pixel_sleep_amount_end:
