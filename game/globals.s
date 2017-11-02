@@ -28,6 +28,10 @@ selected_country: db 0
 ; mask to get what keys are pressed. See input.s for the mask constants
 keys_set: dw 0x0
 
+; mask against below to get which cheats are enabled
+cheats_enabled: dw 0x0
+%define CHEATMASK_SHOWTRAJECTORY 1 << 0
+
 ; screen state. see screens.s for possible values
 current_screen: dw 0x0
 
@@ -44,7 +48,7 @@ current_screen: dw 0x0
 target_x: dw 10
 target_y: dw 100
 
-%define TICKS_BETWEEN_MOVES 20
+%define TICKS_BETWEEN_MOVES 30
 
 
 %define MAX_MISSLES 0x20
