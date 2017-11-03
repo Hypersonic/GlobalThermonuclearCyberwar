@@ -222,24 +222,32 @@ proc move_target
     test word [keys_set], KEYMASK_UP
     jz .no_up
     .up:
+        cmp word [target_y], 0
+        jle .no_up ; ignore if we're at 0
         dec word [target_y]
     .no_up:
 
     test word [keys_set], KEYMASK_DOWN
     jz .no_down
     .down:
+        cmp word [target_y], SCREEN_HEIGHT
+        jge .no_down ; ignore if we're at the top
         inc word [target_y]
     .no_down:
 
     test word [keys_set], KEYMASK_LEFT
     jz .no_left
     .left:
+        cmp word [target_x], 0
+        jle .no_left ; ignore if we're at the left
         dec word [target_x]
     .no_left:
 
     test word [keys_set], KEYMASK_RIGHT
     jz .no_right
     .right:
+        cmp word [target_x], SCREEN_WIDTH
+        jge .no_right ; ignore if we're at the right
         inc word [target_x]
     .no_right:
 
