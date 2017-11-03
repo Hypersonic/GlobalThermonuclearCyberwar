@@ -5,8 +5,8 @@
 %include "launchsites.s"
 
 %define PHASE_SELECTLAUNCHSITE 0
-%define PHASE_SELECTTARGET     0
-%define PHASE_ENEMYMOVE        0
+%define PHASE_SELECTTARGET     1
+%define PHASE_ENEMYMOVE        2
 
 proc screen_gameplay
 %stacksize small
@@ -22,7 +22,21 @@ proc screen_gameplay
     mov [saved_cx], cx
 
     call draw_worldmap
-    call move_target
+    call draw_launchsites
+    call draw_selected_launchsite
+
+    cmp word [game_phase], PHASE_SELECTTARGET
+    jne .no_move_target
+    .move_target:
+        call move_target
+    .no_move_target:
+    
+    cmp word [game_phase], PHASE_SELECTLAUNCHSITE
+    jne .no_select_launchsite
+    .select_launchsite:
+        call select_launchsite
+    .no_select_launchsite:
+
     call draw_target
 
     push_args 10, 100, word [target_x], word [target_y], 2, 0x10
@@ -216,6 +230,39 @@ proc move_target
     .no_a:
 endproc
 
+; switch selected launchsite with left/right
+; select launchsite with return
+proc select_launchsite
+%stacksize small
+    test word [keys_set], KEYMASK_LEFT
+    jz .no_left
+    .left:
+        dec word [selected_launch_site]
+    .no_left:
+
+    test word [keys_set], KEYMASK_RIGHT
+    jz .no_right
+    .right:
+        inc word [selected_launch_site]
+    .no_right:
+
+    ; keep bounds in range to selected_country
+    and word [selected_launch_site], 0b11
+
+    cmp word [selected_country], COUNTRY_AMERICA
+    je .country_america
+    .country_ussr:
+        add word [selected_launch_site], 4
+    .country_america:
+
+    test word [keys_set], KEYMASK_ENTER
+    jz .no_enter
+    .enter:
+        mov word [game_phase], PHASE_SELECTTARGET
+    .no_enter:
+endproc
+
+
 ; find a missile slot that is available, or return -1 if none
 proc get_available_missile_slot
 %stacksize small
@@ -301,6 +348,121 @@ proc draw_target
     call draw_pixel
     add sp, 2*3
 
+    mov bx, [saved_bx]
+    mov ax, [saved_ax]
+    add sp, %$localsize
+endproc
+
+proc draw_launchsites
+%stacksize small
+%assign %$localsize 0
+%local \
+    saved_ax:word, \
+    saved_bx:word, \
+    saved_cx:word, \
+    saved_si:word
+
+    sub sp, %$localsize
+    mov [saved_ax], ax
+    mov [saved_bx], bx
+    mov [saved_cx], cx
+    mov [saved_si], si
+
+    mov si, launchsites
+    .loop:
+        mov ax, [si + 4]
+        mov bx, [si + 6]
+        mov cx, 3
+        add cx, [si + 2]
+
+        ; +
+        ;  
+        ;
+        dec ax
+        dec bx
+        push_args ax, bx, cx
+        call draw_pixel
+        add sp, 2*3
+
+        ; +
+        ;  
+        ;  +
+        inc ax
+        inc bx
+        inc bx
+        push_args ax, bx, cx
+        call draw_pixel
+        add sp, 2*3
+
+        ; + +
+        ;    
+        ;  +
+        inc ax
+        dec bx
+        dec bx
+        push_args ax, bx, cx
+        call draw_pixel
+        add sp, 2*3
+
+        add si, 8
+        cmp si, end_launchsites
+        jl .loop
+
+    mov si, [saved_si]
+    mov cx, [saved_cx]
+    mov bx, [saved_bx]
+    mov ax, [saved_ax]
+    add sp, %$localsize
+endproc
+
+proc draw_selected_launchsite
+%stacksize small
+%assign %$localsize 0
+%local \
+    saved_ax:word, \
+    saved_bx:word, \
+    saved_si:word
+    sub sp, %$localsize
+    mov [saved_ax], ax
+    mov [saved_bx], bx
+    mov [saved_si], si
+
+    mov si, [selected_launch_site]
+    shl si, 3
+    add si, launchsites
+
+    mov ax, [si + 4]
+    mov bx, [si + 6]
+
+    ;   
+    ;
+    ; +
+    dec ax
+    push_args ax, bx, 0x0c
+    call draw_pixel
+    add sp, 2*3
+
+    ;   
+    ;
+    ; + +
+    inc ax
+    inc ax
+    push_args ax, bx, 0x0c
+    call draw_pixel
+    add sp, 2*3
+
+    ;  +
+    ;
+    ; + +
+    dec ax
+    dec bx
+    dec bx
+    push_args ax, bx, 0x0c
+    call draw_pixel
+    add sp, 2*3
+
+
+    mov si, [saved_si]
     mov bx, [saved_bx]
     mov ax, [saved_ax]
     add sp, %$localsize

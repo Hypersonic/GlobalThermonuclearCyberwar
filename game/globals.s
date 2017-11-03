@@ -52,6 +52,10 @@ target_x: dw 10
 target_y: dw 100
 target_strength: dw 0xc
 
+
+; selected launch site index
+selected_launch_site: dw 0x1
+
 %define TICKS_BETWEEN_MOVES 30
 
 
