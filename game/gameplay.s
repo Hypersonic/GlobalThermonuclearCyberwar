@@ -29,6 +29,22 @@ proc screen_gameplay
     jne .no_move_target
     .move_target:
         call move_target
+        call draw_target
+
+        ; if the show_trajectory cheat is on, show it
+        test word [cheats_enabled], CHEATMASK_SHOWTRAJECTORY
+        jz .no_show_trajectory
+        .show_trajectory:
+            mov si, [selected_launch_site]
+            shl si, 3
+            add si, launchsites
+            push_args word [si + 4], word [si + 6], \
+                      word [target_x], word [target_y], \
+                      word [target_strength], 0x10
+            call draw_trajectory
+            add sp, 2*6
+        .no_show_trajectory:
+
     .no_move_target:
     
     cmp word [game_phase], PHASE_SELECTLAUNCHSITE
@@ -37,11 +53,13 @@ proc screen_gameplay
         call select_launchsite
     .no_select_launchsite:
 
-    call draw_target
-
-    push_args 10, 100, word [target_x], word [target_y], 2, 0x10
-    call draw_trajectory
-    add sp, 2*6
+    cmp word [game_phase], PHASE_ENEMYMOVE
+    jne .no_enemy_move
+    .enemy_move:
+        ; TODO: AI
+        ; until ^, just go back to selecting launch site
+        mov word [game_phase], PHASE_SELECTLAUNCHSITE
+    .no_enemy_move:
 
     mov si, missile_slots
     .loop:
@@ -191,6 +209,16 @@ endproc
 ; also chane intensity of shot (q/a)
 proc move_target
 %stacksize small
+%assign %$localsize 0
+%local \
+    saved_ax:word, \
+    saved_si:word, \
+    saved_di:word
+
+    sub sp, %$localsize
+    mov [saved_ax], ax
+    mov [saved_si], si
+
     test word [keys_set], KEYMASK_UP
     jz .no_up
     .up:
@@ -228,6 +256,46 @@ proc move_target
         dec word [target_strength]
         and word [target_strength], 0xff
     .no_a:
+
+    test word [keys_set], KEYMASK_ENTER
+    jz .no_enter
+    .enter:
+        ; when enter is pressed assign a missile slot to this missle,
+        ; and let the AI move
+        call get_available_missile_slot
+        ; just bail out (as if nothing was pressed) if no slot is
+        cmp ax, -1
+        je .no_enter
+
+        mov si, ax
+        shl si, 4
+        add si, missile_slots
+
+        mov di, [selected_launch_site]
+        shl di, 3
+        add di, launchsites
+        .fill_missile_slot:
+            mov ax, [di + 4]
+            mov word [si + 0], ax                   ; launch_x
+            mov ax, [di + 6]
+            mov word [si + 2], ax                   ; launch_y
+            mov ax, [target_x]
+            mov word [si + 4], ax                   ; target_x
+            mov ax, [target_y]
+            mov word [si + 6], ax                   ; target_y
+            mov word [si + 8], 0x0                  ; end_sweep
+            mov word [si + 10], TICKS_BETWEEN_MOVES ; ticks_until_move
+            mov byte [si + 12], 1                   ; in_use
+            mov al, [selected_country]
+            mov byte [si + 13], al                  ; country
+            mov ax, [target_strength]
+            mov byte [si + 14], al                  ; yield
+    .no_enter:
+
+    mov di, [saved_di]
+    mov si, [saved_si]
+    mov ax, [saved_ax]
+    add sp, %$localsize
 endproc
 
 ; switch selected launchsite with left/right
@@ -249,7 +317,7 @@ proc select_launchsite
     ; keep bounds in range to selected_country
     and word [selected_launch_site], 0b11
 
-    cmp word [selected_country], COUNTRY_AMERICA
+    cmp byte [selected_country], COUNTRY_AMERICA
     je .country_america
     .country_ussr:
         add word [selected_launch_site], 4
@@ -275,15 +343,16 @@ proc get_available_missile_slot
 
     mov ax, 0
     .loop:
-        ; if in_use != 0, end
+        ; if in_use == 0, we found an unused slot, end
         mov si, ax
         shl si, 4
         cmp byte [missile_slots + si + 12], 0
-        jne .end
+        je .end
 
         inc ax
         cmp ax, MAX_MISSLES
         jl .loop
+        ; fallthru to none_found
 
     .none_found: ; if we don't find any, return -1
         mov ax, -1

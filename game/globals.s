@@ -48,7 +48,7 @@ game_phase: dw 0x0
 %define SCREEN_GAMEPLAY 1
 
 ; targetting
-target_x: dw 10
+target_x: dw 160
 target_y: dw 100
 target_strength: dw 0xc
 
