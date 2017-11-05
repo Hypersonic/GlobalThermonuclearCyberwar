@@ -17,5 +17,11 @@ run: main.bin
 	@echo "Binary is $(num_kb) KB long"
 	qemu-system-i386 -serial stdio -d guest_errors -drive format=raw,file=main.bin
 
+vnc: main.bin
+	qemu-system-i386 -vnc :0 -d guest_errors -drive format=raw,file=main.bin
+
+dbg-vnc: main.bin
+	qemu-system-i386 -S -s -vnc :0 -d guest_errors -drive format=raw,file=main.bin
+
 dbg: main.bin
 	qemu-system-i386 -S -s -d guest_errors -drive format=raw,file=main.bin

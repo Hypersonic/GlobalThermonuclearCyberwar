@@ -66,7 +66,7 @@ proc blit_screen
     mov ecx, 0
 
     .loop:
-        mov ebx,  dword [FRAMEBUFFER_BASE + ecx]
+        mov ebx,  dword [FRAMEBUFFER_BASE - (DEBUG_FRAMEBUFFER_OFFSET * SCREEN_WIDTH) + ecx]
         mov dword [VMEM_BASE + ecx], ebx
         add ecx, 4
         cmp ecx, SCREEN_WIDTH * SCREEN_HEIGHT

@@ -265,6 +265,12 @@ proc move_target
         and word [target_strength], 0xff
     .no_a:
 
+    test word [keys_set], KEYMASK_T
+    jz .no_t
+    .t:
+        xor word [cheats_enabled], CHEATMASK_SHOWTRAJECTORY
+    .no_t:
+
     test word [keys_set], KEYMASK_ENTER
     jz .no_enter
     .enter:

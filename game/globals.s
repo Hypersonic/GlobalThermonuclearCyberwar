@@ -40,6 +40,7 @@ game_phase: dw 0x0
 
 %define FRAMEBUFFER_BASE 0x10000
 %define VMEM_BASE 0xA0000
+%define DEBUG_FRAMEBUFFER_OFFSET 0 ; set this to 100 to see the stack :)
 %define SCREEN_WIDTH 320
 %define SCREEN_HEIGHT 200
 
@@ -98,5 +99,7 @@ end_country_cursor:
 
 country_clear: db " "
 end_country_clear:
+
+flag: db "flag{c4n_4ny0n3_really_w1n_1n_cyb3rw4r}"
 
 %endif

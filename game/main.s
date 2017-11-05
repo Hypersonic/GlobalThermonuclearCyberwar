@@ -9,9 +9,9 @@ jmp main
 %include "screen.s"
 %include "graphics.s"
 
+ret ; for testing, hit this
 main:
     ; call setup_demo_launches ; for testing :)
-    ; or word [cheats_enabled], CHEATMASK_SHOWTRAJECTORY ; for testing, until cheat menu...
 
     mov word [current_screen], SCREEN_MENU
     mov word [game_phase], PHASE_SELECTLAUNCHSITE
