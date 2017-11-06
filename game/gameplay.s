@@ -558,11 +558,11 @@ proc draw_worldmap
         .map_render_pixel_sleep_amount_begin:
         ; sleep a bit
         push ax
-        ;mov cx, 0x0000
-        ;mov dx, 0x04ff
-        ;mov ah, 0x86
-        ;int 0x15
-        ;call blit_screen
+        mov cx, 0x0000
+        mov dx, 0x04ff
+        mov ah, 0x86
+        int 0x15
+        call blit_screen
         pop ax
         ; end label for self-modifying code
         .map_render_pixel_sleep_amount_end:

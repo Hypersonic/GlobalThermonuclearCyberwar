@@ -141,6 +141,9 @@ with Client(args.target, args.password, delay=args.delay) as client:
     # select USA
     client.press_key('enter')
 
+    print('Waiting for map to render...')
+    time.sleep(10)
+
     # select left-most launch site, useful for aiming later
     client.press_key('left')
     client.press_key('left')
