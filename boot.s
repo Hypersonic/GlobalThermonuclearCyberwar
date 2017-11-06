@@ -124,9 +124,9 @@ db 0 ; always 0
 .lba_upper: dd 0x0
 
 
-; correct passwd is "Joshua!!"
+; correct passwd is "-JOSHUA-"
 ; Guess it's a bit of a credits thing?
-passwd_input: db "JOSHUA!!"
+passwd_input: db "        "
 
 db 0x0
 
