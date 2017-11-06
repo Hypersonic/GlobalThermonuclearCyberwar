@@ -30,21 +30,6 @@ proc screen_gameplay
     .move_target:
         call move_target
         call draw_target
-
-        ; if the show_trajectory cheat is on, show it
-        test word [cheats_enabled], CHEATMASK_SHOWTRAJECTORY
-        jz .no_show_trajectory
-        .show_trajectory:
-            mov si, [selected_launch_site]
-            shl si, 3
-            add si, launchsites
-            push_args word [si + 4], word [si + 6], \
-                      word [target_x], word [target_y], \
-                      word [target_strength], 0x10
-            call draw_trajectory
-            add sp, 2*6
-        .no_show_trajectory:
-
     .no_move_target:
     
     cmp word [game_phase], PHASE_SELECTLAUNCHSITE
@@ -182,7 +167,6 @@ proc draw_trajectory
     mov [mid_x], ax
 
     ; mid_y = min(start_y, end_y) - 100
-    ; TODO: find a really volatile formula instead that gives them overwrite
     mov ax, [bp + %$start_y]
     cmp ax, [bp + %$end_y]
     jl .no_min
@@ -264,12 +248,6 @@ proc move_target
         dec word [target_strength]
         and word [target_strength], 0xff
     .no_a:
-
-    test word [keys_set], KEYMASK_T
-    jz .no_t
-    .t:
-        xor word [cheats_enabled], CHEATMASK_SHOWTRAJECTORY
-    .no_t:
 
     test word [keys_set], KEYMASK_ENTER
     jz .no_enter
