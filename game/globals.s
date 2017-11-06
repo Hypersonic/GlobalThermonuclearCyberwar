@@ -98,9 +98,11 @@ end_country_cursor:
 country_clear: db " "
 end_country_clear:
 
+; basically just a checkpoint at finding the password
 ez_flag: db "flag{ok_you_decrypted_it_now_plz_pwn_it!}"
 end_ez_flag:
 
+; the binary they get will have this scrubbed
 pwn_flag: db "flag{c4n_4ny0n3_really_w1n_1n_cyb3rw4r?}"
 end_pwn_flag:
 
