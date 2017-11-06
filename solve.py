@@ -130,11 +130,13 @@ try:
         for k in '-JOSHUA-':
             client.press_key(k)
 except ValueError:
-    print('going to open new connection, vncdotool handles resizes poorly!')
+    pass
+
+# wait for decrypt
+time.sleep(2)
+print('going to open new connection, vncdotool handles resizes poorly!')
 
 with Client(args.target, args.password, delay=args.delay) as client:
-    # wait for decrypt
-    time.sleep(2)
 
     # select USA
     client.press_key('enter')
