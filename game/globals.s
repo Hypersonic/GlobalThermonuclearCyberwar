@@ -68,15 +68,17 @@ missile_slots:
 %rep MAX_MISSLES
 
 missile_slot_ %+ i:
-.launch_x: dw 0           ; +0
-.launch_y: dw 0           ; +2
-.target_x: dw 0           ; +4
-.target_y: dw 0           ; +6
-.end_sweep: dw 0          ; +8
-.ticks_until_move: dw 0   ; +10
-.in_use: db 0             ; +12
-.country: db 0            ; +13
-.color: dw 0              ; +14
+; these initial values are basically all junk. just want to make the hexdump
+; slightly less boring...
+.launch_x: dw 0x6546         ; +0
+.launch_y: dw 0x3124         ; +2
+.target_x: dw 0xcfff         ; +4
+.target_y: dw 0xf3ac         ; +6
+.end_sweep: dw 0x234c        ; +8
+.ticks_until_move: dw 0x41ac ; +10
+.in_use: db 0x0              ; +12
+.country: db 0x12            ; +13
+.color: dw 0x4334            ; +14
 
 %assign i i+1
 %endrep
@@ -100,6 +102,10 @@ end_country_cursor:
 country_clear: db " "
 end_country_clear:
 
-flag: db "flag{c4n_4ny0n3_really_w1n_1n_cyb3rw4r}"
+ez_flag: db "flag{ok_you_decrypted_it_now_plz_pwn_it!}"
+end_ez_flag:
+
+pwn_flag: db "flag{c4n_4ny0n3_really_w1n_1n_cyb3rw4r?}"
+end_pwn_flag:
 
 %endif

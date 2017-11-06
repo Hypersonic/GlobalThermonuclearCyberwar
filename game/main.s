@@ -2,6 +2,9 @@ org 1000h
 ; Entry point, put includes after this, please!
 jmp main
 
+; decrypt signature, bootloader will check this for accuracy
+db "WARGAMES"
+
 
 %include "globals.s"
 %include "macros.s"
@@ -9,9 +12,8 @@ jmp main
 %include "screen.s"
 %include "graphics.s"
 
-ret ; for testing, hit this
 main:
-    ; call setup_demo_launches ; for testing :)
+     ;call setup_demo_launches ; for testing :)
 
     mov word [current_screen], SCREEN_MENU
     mov word [game_phase], PHASE_SELECTLAUNCHSITE
@@ -19,7 +21,7 @@ main:
     .forever:
         call get_keys
         call clear_framebuffer
-        call draw_keypress_pixels
+        ; call draw_keypress_pixels ; for testing :)
         call do_current_screen
 
         ; sleep a bit

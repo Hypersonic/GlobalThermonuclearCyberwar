@@ -2,7 +2,7 @@
 
 mov ax, 0x1300
 mov bx, 0x000f
-mov cx, 39
+mov cx, 40
 mov dx, 0x0000
-mov bp, 0x1231
+mov bp, 0x1262
 int 0x10

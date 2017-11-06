@@ -1,8 +1,11 @@
-main.bin: boot.s game.bin
+main.bin: boot.s game.bin.enc
 	$(eval num_sectors := $(shell BLOCKSIZE=512 du game.bin | cut -f1))
 	nasm -D NUM_SECTORS=$(num_sectors) -f bin -o load.bin boot.s
 	dd bs=512 if=load.bin of=main.bin
-	dd bs=512 seek=1 if=game.bin of=main.bin
+	dd bs=512 seek=1 if=game.bin.enc of=main.bin
+
+game.bin.enc: game.bin enc_game_bin.py
+	python3 enc_game_bin.py
 
 game.bin: generated_files game/*
 	nasm -g -i game/ -f bin -o game.bin game/main.s
