@@ -29,10 +29,10 @@ selected_country: db 0
 keys_set: dw 0x0
 
 ; screen state. see screens.s for possible values
-current_screen: dw 0x0
+current_screen: dw 0x0 ; 0 = SCREEN_MENU
 
 ; game phase. check against the enum PHASE_* values in game/gameplay.s
-game_phase: dw 0x0
+game_phase: dw 0x0 ; 0 = PHASE_SELECTLAUNCHSITE
 
 %define FRAMEBUFFER_BASE 0x10000
 %define VMEM_BASE 0xA0000

@@ -15,9 +15,6 @@ db "WARGAMES"
 main:
      ;call setup_demo_launches ; for testing :)
 
-    mov word [current_screen], SCREEN_MENU
-    mov word [game_phase], PHASE_SELECTLAUNCHSITE
-
     .forever:
         call get_keys
         call clear_framebuffer
