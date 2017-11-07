@@ -144,10 +144,12 @@ db %1
 %endmacro
 
 credits_line "CSAW FINALS 2017"
-credits_line "REGIONS:        "
+credits_line "=== REGIONS: ==="
 credits_line " EUROPE, INDIA, "
 credits_line " ISRAEL, MENA,  "
 credits_line " NORTH AMERICA  "
+credits_line "I hope you enjoy"
+credits_line "<3, Hyper"
 
 times 0200h - 2 - ($ - $$)  db 0    ;zerofill up to 510 bytes
 dw 0AA55h       ;Boot Sector signature
