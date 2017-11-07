@@ -47,9 +47,9 @@ proc screen_gameplay
     .no_enemy_move:
 
     mov si, missile_slots
-    .loop:
+    .missile_loop:
         cmp byte [si + 12], 0 ; skip if not in_use
-        je .skip
+        je .skip_missile
 
         ; render missile
         push_args word [si + 0], word [si + 2], \
@@ -72,20 +72,53 @@ proc screen_gameplay
                 jmp .after_sweep
             .no_inc_sweep:
                 ; TODO: create explosion here
-                mov word [si + 8], 0
+                push_args word [si + 4], word [si + 6]
+                call create_explosion
+                add sp, 2*2
+
+                mov byte [si + 12], 0 ; missile.in_use = false
             .after_sweep:
         .no_reset_ticks:
         
-        add si, 16
-        cmp si, end_missile_slots
-        jl .loop
-        jmp .after_loop
-        .skip:
+        .skip_missile:
             add si, 16
             cmp si, end_missile_slots
-            jl .loop
-    .after_loop:
+            jl .missile_loop
+    .after_missile_loop:
 
+    mov si, explosion_slots
+    .explosion_loop:
+        cmp byte [si + 6], 0 ; skip if not in_use
+        je .skip_explosion
+
+        ; render explosion
+        mov ax, [si + 4]
+
+        ; ax = EXPLOSION_TICKS - ax
+        ; -> (ax = - (ax - EXPLOSION_TICKS))
+        sub ax, EXPLOSION_TICKS
+        neg ax
+
+        shr ax, 5 ; divide by a bunch to keep sizes under control
+
+        push_args word [si + 0], word [si + 2], ax, 0x4
+        call draw_filled_circle
+        add sp, 2*4
+
+        ; advance ticks_until_death
+        dec word [si + 4]
+        cmp word [si + 4], 0
+        jne .no_remove_explosion
+        .remove_explosion:
+            mov byte [si + 6], 0 ; explosion.in_use = false
+        .no_remove_explosion:
+
+        .skip_explosion:
+            add si, 8
+            cmp si, end_explosion_slots
+            jl .explosion_loop
+        
+        
     .end:
 
     call blit_screen
@@ -321,6 +354,49 @@ proc select_launchsite
         mov word [game_phase], PHASE_SELECTTARGET
     .no_enter:
 endproc
+
+; create an explosion in a free explosion slot
+; does nothing if none available
+; create_explosion(uint16_t x, uint16_t y)
+proc create_explosion
+%stacksize small
+%assign %$localsize 0
+%$x arg
+%$y arg
+%local \
+    saved_ax:word, \
+    saved_si:word
+    
+    sub sp, %$localsize
+    mov [saved_ax], ax
+    mov [saved_si], si
+
+    mov si, explosion_slots
+    .loop:
+        cmp byte [si + 6], 0 ; skip if in_use
+        jne .next
+
+        ; we found one. set it up, then we're done
+        mov ax, [bp + %$x]
+        mov word [si + 0], ax ; x
+        mov ax, [bp + %$y]
+        mov word [si + 2], ax ; y
+        mov word [si + 4], EXPLOSION_TICKS ; ticks
+        mov byte [si + 6], 1 ; in_use
+        jmp .end
+
+        .next:
+            add si, 8
+            cmp si, end_explosion_slots
+            jle .loop
+
+
+    .end:
+    mov si, [saved_si]
+    mov ax, [saved_ax]
+    add sp, %$localsize
+endproc
+
 
 
 ; find a missile slot that is available, or return -1 if none

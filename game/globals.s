@@ -81,6 +81,25 @@ missile_slot_ %+ i:
 end_missile_slots:
 
 
+%define EXPLOSION_TICKS 200
+
+%define MAX_EXPLOSIONS MAX_MISSLES
+; Explosions currently goin'
+explosion_slots:
+%assign i 0
+%rep MAX_EXPLOSIONS
+explosion_slot_ %+ i:
+.explosion_x: dw 0x0        ; +0
+.explosion_y: dw 0x0        ; +2
+.ticks_until_death: dw 0x0  ; +4
+.in_use: db 0x0             ; +6
+.pad: db 0x0                ; +7
+
+%assign i i+1
+%endrep
+end_explosion_slots:
+
+
 ; ==== STRINGS ====
 
 select_country: db "SELECT YOUR COUNTRY:"

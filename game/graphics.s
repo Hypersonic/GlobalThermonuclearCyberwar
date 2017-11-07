@@ -471,6 +471,129 @@ proc denormalize_from_octant
 	add sp, %$localsize
 endproc
 
+; draw_filled_circle(uint16_t x, uint16_t y, uint16_t r, uint16_t color)
+proc draw_filled_circle
+%stacksize small
+%assign %$localsize 0
+%$x     arg
+%$y     arg
+%$r     arg
+%$color arg
+%local \
+    saved_ax:word, \
+    saved_bx:word, \
+    x_i:word, \
+    y_i:word, \
+    delta_x:word, \
+    delta_y:word, \
+    err:word
+
+    sub sp, %$localsize
+    mov [saved_ax], ax
+    mov [saved_bx], bx
+
+    ; x_i = r - 1
+    mov ax, [bp + %$r]
+    dec ax
+    mov [x_i], ax
+    ; y_i = 0 
+    mov word [y_i], 0
+    ; delta_x = 1
+    mov word [delta_x], 1
+    ; delta_y = 1
+    mov word [delta_y], 1
+    ; err = dx - (radius << 1)
+    mov ax, [delta_x]
+    sub ax, [bp + %$r]
+    sub ax, [bp + %$r]
+    mov [err], ax
+
+    ; while (x_i >= y_i)
+    .loop:
+        mov bx, [bp + %$y]
+        add bx, [y_i]
+        ; putpixel(x0 + x_i, y0 + y_i);
+        ; putpixel(x0 - x_i, y0 + y_i);
+            mov ax, [bp + %$x]
+            add ax, [x_i]
+            mov cx, [bp + %$x]
+            sub cx, [x_i]
+            push_args ax, bx, cx, bx, word [bp + %$color]
+            call draw_line
+            add sp, 2*5
+
+        mov bx, [bp + %$y]
+        add bx, [x_i]
+        ; putpixel(x0 + y_i, y0 + x_i);
+        ; putpixel(x0 - y_i, y0 + x_i);
+            mov ax, [bp + %$x]
+            add ax, [y_i]
+            mov cx, [bp + %$x]
+            sub cx, [y_i]
+            push_args ax, bx, cx, bx, word [bp + %$color]
+            call draw_line
+            add sp, 2*5
+
+        mov bx, [bp + %$y]
+        sub bx, [y_i]
+        ; putpixel(x0 - x_i, y0 - y_i);
+        ; putpixel(x0 + x_i, y0 - y_i);
+            mov ax, [bp + %$x]
+            sub ax, [x_i]
+            mov cx, [bp + %$x]
+            add cx, [x_i]
+            push_args ax, bx, cx, bx, word [bp + %$color]
+            call draw_line
+            add sp, 2*5
+
+        mov bx, [bp + %$y]
+        sub bx, [x_i]
+        ; putpixel(x0 - y_i, y0 - x_i);
+        ; putpixel(x0 + y_i, y0 - x_i);
+            mov ax, [bp + %$x]
+            sub ax, [y_i]
+            mov cx, [bp + %$x]
+            add cx, [y_i]
+            push_args ax, bx, cx, bx, word [bp + %$color]
+            call draw_line
+            add sp, 2*5
+
+
+        cmp word [err], 0
+        jg .err_gt_zero_first
+        .err_lte_zero_first:
+            ; y_i++;
+            inc word [y_i]
+            ; err += delta_y;
+            mov ax, [delta_y]
+            add [err], ax
+            ; delta_y += 2;
+            add word [delta_y], 2
+        .err_gt_zero_first:
+
+        cmp word [err], 0
+        jle .err_lte_zero_second
+        .err_gt_zero_second:
+            ; x_i--;
+            dec word [x_i]
+            ; delta_x += 2;
+            add word [delta_x], 2
+            ; err += (-radius << 1) + delta_x;
+            xor ax, ax
+            sub ax, [bp + %$r]
+            sub ax, [bp + %$r]
+            add ax, [delta_x]
+            add [err], ax
+        .err_lte_zero_second:
+
+        mov ax, [x_i]
+        cmp ax, word [y_i]
+        jge .loop
+
+    mov bx, [saved_bx]
+    mov ax, [saved_ax]
+    add sp, %$localsize
+endproc
 
 ; uint16_t interpolate(uint16_t lo, uint16_t hi, uint16_t t)
 ; interpolate between lo and hi by t / 256

