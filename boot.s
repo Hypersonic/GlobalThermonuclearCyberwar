@@ -131,7 +131,8 @@ passwd_input: db "        "
 db 0x0
 
 login_prompt: db "WOPR SUPERCOMPUTER", 0xd, 0xa, \
-                 "IF YOU ARE UNAUTHORIZED TO USE THIS CSAW COMPUTER, DISCONNECT IMMEDIATELY.", 0xd, 0xa, \
+                 "THIS IS A CSAW OWNED COMPUTER SYSTEM - ALL ATTEMPTS AT ILLEGAL ACCESS WILL", 0xd, 0xa, \
+                 "BE SEVERELY PUNISHED TO THE FULL EXTENT OF THE LAW.", 0xd, 0xa, \
                  "FOR AUTHORIZATION, PLEASE WRITE TO PROF. STEVEN FALKEN.", 0xd, 0xa, \
                  "LOGIN>", 0
 
