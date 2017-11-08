@@ -49,6 +49,11 @@ target_x: dw 160
 target_y: dw 100
 target_strength: dw 0xc
 
+; RNG state
+rng_state: dw 0x4c
+
+; demo interval timer
+demo_timer: dw 100
 
 ; selected launch site index
 selected_launch_site: dw 0x1
@@ -56,7 +61,7 @@ selected_launch_site: dw 0x1
 %define TICKS_BETWEEN_MOVES 30
 
 
-%define MAX_MISSLES 0x20
+%define MAX_MISSLES 0x40
 ; missiles in flight
 ; we _could_ use nasm's struct abstraction here, but i'm lazy
 missile_slots:
@@ -81,7 +86,7 @@ missile_slot_ %+ i:
 end_missile_slots:
 
 
-%define EXPLOSION_TICKS 200
+%define EXPLOSION_TICKS 100
 
 %define MAX_EXPLOSIONS MAX_MISSLES
 ; Explosions currently goin'

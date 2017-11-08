@@ -14,6 +14,7 @@ db "WARGAMES"
 
 main:
      ;call setup_demo_launches ; for testing :)
+     ;mov word [game_phase], PHASE_DEMO
 
     .forever:
         call get_keys

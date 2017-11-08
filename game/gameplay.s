@@ -7,6 +7,7 @@
 %define PHASE_SELECTLAUNCHSITE 0
 %define PHASE_SELECTTARGET     1
 %define PHASE_ENEMYMOVE        2
+%define PHASE_DEMO             3
 
 proc screen_gameplay
 %stacksize small
@@ -25,27 +26,49 @@ proc screen_gameplay
     call draw_launchsites
     call draw_selected_launchsite
 
-    cmp word [game_phase], PHASE_SELECTTARGET
-    jne .no_move_target
-    .move_target:
-        call move_target
-        call draw_target
-    .no_move_target:
-    
-    cmp word [game_phase], PHASE_SELECTLAUNCHSITE
-    jne .no_select_launchsite
-    .select_launchsite:
-        call select_launchsite
-    .no_select_launchsite:
+    cmp word [game_phase], PHASE_DEMO
+    je .demo_phase
 
-    cmp word [game_phase], PHASE_ENEMYMOVE
-    jne .no_enemy_move
-    .enemy_move:
-        ; TODO: AI
-        ; until ^, just go back to selecting launch site
-        mov word [game_phase], PHASE_SELECTLAUNCHSITE
-    .no_enemy_move:
+    .not_demo_phase:
+        cmp word [game_phase], PHASE_SELECTTARGET
+        jne .no_move_target
+        .move_target:
+            call move_target
+            call draw_target
+        .no_move_target:
+        
+        cmp word [game_phase], PHASE_SELECTLAUNCHSITE
+        jne .no_select_launchsite
+        .select_launchsite:
+            call select_launchsite
+        .no_select_launchsite:
 
+        cmp word [game_phase], PHASE_ENEMYMOVE
+        jne .no_enemy_move
+        .enemy_move:
+            xor ax, ax
+            mov al, byte [selected_country]
+            xor al, 1
+            push_args ax
+            call do_ai_move
+            add sp, 2*1
+            ; until ^, just go back to selecting launch site
+            mov word [game_phase], PHASE_SELECTLAUNCHSITE
+        .no_enemy_move:
+        jmp .render_everything
+
+    .demo_phase:
+        dec word [demo_timer]
+        cmp word [demo_timer], 0
+        jne .render_everything
+        .add_demo_missile:
+            push_args word [selected_country]
+            call do_ai_move
+            add sp, 2*1
+            xor word [selected_country], 1
+            mov word [demo_timer], 10
+
+    .render_everything:
     mov si, missile_slots
     .missile_loop:
         cmp byte [si + 12], 0 ; skip if not in_use
@@ -71,7 +94,6 @@ proc screen_gameplay
                 inc word [si + 8]
                 jmp .after_sweep
             .no_inc_sweep:
-                ; TODO: create explosion here
                 push_args word [si + 4], word [si + 6]
                 call create_explosion
                 add sp, 2*2
@@ -99,9 +121,9 @@ proc screen_gameplay
         sub ax, EXPLOSION_TICKS
         neg ax
 
-        shr ax, 5 ; divide by a bunch to keep sizes under control
+        shr ax, 4 ; divide by a bunch to keep sizes under control
 
-        push_args word [si + 0], word [si + 2], ax, 0x4
+        push_args word [si + 0], word [si + 2], ax, 0xf
         call draw_filled_circle
         add sp, 2*4
 
@@ -290,7 +312,7 @@ proc move_target
         call get_available_missile_slot
         ; just bail out (as if nothing was pressed) if no slot is
         cmp ax, -1
-        je .no_enter
+        je .no_missile_slot
 
         mov si, ax
         shl si, 4
@@ -315,6 +337,8 @@ proc move_target
             mov byte [si + 13], al                  ; country
             mov ax, [target_strength]
             mov byte [si + 14], al                  ; yield
+        .no_missile_slot:
+            mov word [game_phase], PHASE_ENEMYMOVE
     .no_enter:
 
     mov di, [saved_di]
@@ -396,8 +420,6 @@ proc create_explosion
     mov ax, [saved_ax]
     add sp, %$localsize
 endproc
-
-
 
 ; find a missile slot that is available, or return -1 if none
 proc get_available_missile_slot
@@ -668,6 +690,116 @@ proc draw_worldmap
     mov cx, [saved_cx]
     mov si, [saved_si]
     add sp, %$localsize
+endproc
+
+; do_ai_move(uint16_t country)
+; make a move as the ai as `country`
+proc do_ai_move
+%stacksize small
+%assign %$localsize 0
+%$country arg
+%local \
+    saved_ax:word, \
+    saved_bx:word, \
+    saved_cx:word, \
+    saved_si:word, \
+    target_x:word, \
+    target_y:word
+
+    sub sp, %$localsize
+    mov [saved_ax], ax
+    mov [saved_bx], bx
+    mov [saved_cx], bx
+    mov [saved_si], si
+
+    ; bx = lower bound for target x
+    ; cx = upper bound for target x
+    mov bx, SCREEN_WIDTH / 2
+    mov cx, SCREEN_WIDTH - 30
+
+    ; if we're looking at america, target the right half of the globe
+    cmp word [bp + %$country], COUNTRY_USSR
+    jne .is_ussr
+    .is_america:
+        mov bx, 30
+        mov cx, 90
+    .is_ussr:
+
+    .get_x_rng:
+        call rng_next
+        ; if we're out of range, just regen
+        ; this is kinda lame but i'm kinda too lazy to do modulo
+        cmp bx, ax
+        jg .get_x_rng
+        cmp ax, cx
+        jg .get_x_rng
+    mov [target_x], ax
+
+    .get_y_rng:
+        call rng_next
+        ; if we're out of range, just regen
+        ; this is kinda lame but i'm kinda too lazy to do modulo
+        cmp ax, 60 ; dont' want ai accidentally triggering the bugs ;)
+        jl .get_y_rng
+        cmp ax, 100
+        jg .get_y_rng
+    mov [target_y], ax
+
+    ; when enter is pressed assign a missile slot to this missle,
+    ; and let the AI move
+    call get_available_missile_slot
+    ; just bail out (as if nothing was pressed) if no slot is
+    cmp ax, -1
+    je .no_missile_slot
+
+    mov si, ax
+    shl si, 4
+    add si, missile_slots
+
+    ; pick a random launch site for the right team
+    call rng_next
+    and ax, 0b11
+    ; check what we're playing as, jmp to the other
+    cmp word [bp + %$country], COUNTRY_AMERICA
+    je .site_america
+    .sites_ussr:
+        add ax, 4
+    .site_america:
+
+    mov di, ax
+    shl di, 3
+    add di, launchsites
+    .fill_missile_slot:
+        mov ax, [di + 4]
+        mov word [si + 0], ax                   ; launch_x
+        mov ax, [di + 6]
+        mov word [si + 2], ax                   ; launch_y
+        mov ax, [target_x]
+        mov word [si + 4], ax                   ; target_x
+        mov ax, [target_y]
+        mov word [si + 6], ax                   ; target_y
+        mov word [si + 8], 0x0                  ; end_sweep
+        mov word [si + 10], TICKS_BETWEEN_MOVES ; ticks_until_move
+        mov byte [si + 12], 1                   ; in_use
+        mov al, [bp + %$country]
+        mov byte [si + 13], al                  ; country
+        mov byte [si + 14], 0x4                 ; yield
+    .no_missile_slot:
+
+    mov [saved_si], si
+    mov [saved_cx], cx
+    mov [saved_bx], bx
+    mov [saved_ax], ax
+    add sp, %$localsize
+endproc
+
+; really crappy LCG-based rng
+proc rng_next
+%stacksize small
+    mov ax, [rng_state]
+    imul ax, 0xcc31
+    add ax, 12345
+    mov [rng_state], ax
 endproc
 
 
