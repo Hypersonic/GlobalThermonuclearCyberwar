@@ -783,7 +783,9 @@ proc do_ai_move
         mov byte [si + 12], 1                   ; in_use
         mov al, [bp + %$country]
         mov byte [si + 13], al                  ; country
-        mov byte [si + 14], 0x4                 ; yield
+        mov ax, [target_x]
+        add ax, [target_y]
+        mov byte [si + 14], al                  ; yield
     .no_missile_slot:
 
     mov [saved_si], si
@@ -797,7 +799,7 @@ endproc
 proc rng_next
 %stacksize small
     mov ax, [rng_state]
-    imul ax, 0xcc31
+    imul ax, 0x2331
     add ax, 12345
     mov [rng_state], ax
 endproc
