@@ -13,7 +13,6 @@ db "WARGAMES"
 %include "graphics.s"
 
 main:
-     ;call setup_demo_launches ; for testing :)
      ;mov word [game_phase], PHASE_DEMO
 
     .forever:
@@ -31,6 +30,7 @@ main:
         jmp .forever
     hlt
 
+%if 0
 ; draw keypress pixels on screen for debugging purposes
 proc draw_keypress_pixels
     test word [keys_set], KEYMASK_UP
@@ -89,3 +89,4 @@ proc draw_keypress_pixels
         add sp, 2*3
     .no_a_pressed:
 endproc
+%endif

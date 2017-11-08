@@ -151,52 +151,6 @@ proc screen_gameplay
     add sp, %$localsize
 endproc
 
-proc setup_demo_launches
-%stacksize small
-%assign %$localsize 0
-
-    mov word [missile_slot_0 + 0], 70                   ; launch_x
-    mov word [missile_slot_0 + 2], 77                   ; launch_y
-    mov word [missile_slot_0 + 4], 200                  ; target_x
-    mov word [missile_slot_0 + 6], 60                   ; target_y
-    mov word [missile_slot_0 + 8], 0x0                  ; end_sweep
-    mov word [missile_slot_0 + 10], TICKS_BETWEEN_MOVES ; ticks_until_move
-    mov byte [missile_slot_0 + 12], 1                   ; in_use
-    mov byte [missile_slot_0 + 13], COUNTRY_AMERICA     ; country
-    mov byte [missile_slot_0 + 14], 0x2                 ; yield
-
-    mov word [missile_slot_1 + 0], 73                   ; launch_x
-    mov word [missile_slot_1 + 2], 84                   ; launch_y
-    mov word [missile_slot_1 + 4], 180                  ; target_x
-    mov word [missile_slot_1 + 6], 65                   ; target_y
-    mov word [missile_slot_1 + 8], 0x4                  ; end_sweep
-    mov word [missile_slot_1 + 10], TICKS_BETWEEN_MOVES ; ticks_until_move
-    mov byte [missile_slot_1 + 12], 1                   ; in_use
-    mov byte [missile_slot_1 + 13], COUNTRY_AMERICA     ; country
-    mov byte [missile_slot_1 + 14], 0x3                 ; yield
-
-    mov word [missile_slot_2 + 0], 65                   ; launch_x
-    mov word [missile_slot_2 + 2], 75                   ; launch_y
-    mov word [missile_slot_2 + 4], 210                  ; target_x
-    mov word [missile_slot_2 + 6], 55                   ; target_y
-    mov word [missile_slot_2 + 8], 0x8                  ; end_sweep
-    mov word [missile_slot_2 + 10], TICKS_BETWEEN_MOVES ; ticks_until_move
-    mov byte [missile_slot_2 + 12], 1                   ; in_use
-    mov byte [missile_slot_2 + 13], COUNTRY_AMERICA     ; country
-    mov byte [missile_slot_2 + 14], 0x4                 ; yield
-
-    mov word [missile_slot_3 + 0], 60                   ; launch_x
-    mov word [missile_slot_3 + 2], 79                   ; launch_y
-    mov word [missile_slot_3 + 4], 180                  ; target_x
-    mov word [missile_slot_3 + 6], 88                   ; target_y
-    mov word [missile_slot_3 + 8], 0xc                  ; end_sweep
-    mov word [missile_slot_3 + 10], TICKS_BETWEEN_MOVES ; ticks_until_move
-    mov byte [missile_slot_3 + 12], 1                   ; in_use
-    mov byte [missile_slot_3 + 13], COUNTRY_AMERICA     ; country
-    mov byte [missile_slot_3 + 14], 0x5                 ; yield
-
-endproc
-
 ; draw_trajectory(start_x, start_y, end_x, end_y, color, end_sweep)
 proc draw_trajectory
 %stacksize small
