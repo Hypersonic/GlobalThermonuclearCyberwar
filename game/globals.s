@@ -94,11 +94,13 @@ explosion_slots:
 %assign i 0
 %rep MAX_EXPLOSIONS
 explosion_slot_ %+ i:
-.explosion_x: dw 0x0        ; +0
-.explosion_y: dw 0x0        ; +2
-.ticks_until_death: dw 0x0  ; +4
-.in_use: db 0x0             ; +6
-.pad: db 0x0                ; +7
+; these initial values are basically all junk. just want to make the hexdump
+; slightly less boring...
+.explosion_x: dw 0xc23        ; +0
+.explosion_y: dw 0x3943       ; +2
+.ticks_until_death: dw 0x3431 ; +4
+.in_use: db 0x0               ; +6
+.pad: db 0xcc                 ; +7
 
 %assign i i+1
 %endrep
